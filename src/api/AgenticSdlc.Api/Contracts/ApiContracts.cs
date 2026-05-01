@@ -23,3 +23,11 @@ public sealed record WorkflowResponse(
     string CurrentNode,
     IReadOnlyDictionary<string, object?> Artifacts);
 
+public sealed record SectionResponse(
+    string ArtifactType,
+    string SectionName,
+    object? Content);
+
+public sealed record SectionsResponse(
+    string ProjectId,
+    IReadOnlyList<SectionResponse> Sections);

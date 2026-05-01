@@ -1,9 +1,15 @@
 from fastapi import APIRouter, HTTPException
 
-from app.graph.runner import start_workflow, handle_hitl_action
+from app.graph.runner import (
+    get_sections,
+    get_workflow_state,
+    handle_hitl_action,
+    start_workflow,
+)
 from app.schemas.contracts import (
     HealthResponse,
     HitlActionRequest,
+    SectionsResponse,
     StartWorkflowRequest,
     WorkflowResponse,
 )
@@ -24,10 +30,27 @@ def workflow_start(request: StartWorkflowRequest) -> WorkflowResponse:
     return start_workflow(request)
 
 
+@router.get("/workflow/{project_id}/state", response_model=WorkflowResponse)
+def workflow_state(project_id: str) -> WorkflowResponse:
+    response = get_workflow_state(project_id)
+    if response is None:
+        raise HTTPException(status_code=404, detail="workflow state was not found")
+
+    return response
+
+
+@router.get("/sections/{project_id}", response_model=SectionsResponse)
+def project_sections(project_id: str) -> SectionsResponse:
+    response = get_sections(project_id)
+    if response is None:
+        raise HTTPException(status_code=404, detail="sections were not found")
+
+    return response
+
+
 @router.post("/workflow/hitl", response_model=WorkflowResponse)
 def workflow_hitl(request: HitlActionRequest) -> WorkflowResponse:
     if request.action not in {"approve", "edit", "regenerate"}:
         raise HTTPException(status_code=400, detail="action must be approve, edit, or regenerate")
 
     return handle_hitl_action(request)
-

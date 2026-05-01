@@ -33,3 +33,17 @@ class WorkflowResponse(BaseModel):
 
     model_config = {"populate_by_name": True}
 
+
+class SectionResponse(BaseModel):
+    artifact_type: str = Field(alias="artifactType")
+    section_name: str = Field(alias="sectionName")
+    content: Any
+
+    model_config = {"populate_by_name": True}
+
+
+class SectionsResponse(BaseModel):
+    project_id: str = Field(alias="projectId")
+    sections: list[SectionResponse]
+
+    model_config = {"populate_by_name": True}

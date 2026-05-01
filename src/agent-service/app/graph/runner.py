@@ -3,7 +3,13 @@ from app.graph.nodes.architect_node import architect_node
 from app.graph.nodes.hitl_node import hitl_node
 from app.graph.nodes.manager_node import manager_node
 from app.graph.nodes.pm_node import pm_node
-from app.schemas.contracts import HitlActionRequest, StartWorkflowRequest, WorkflowResponse
+from app.schemas.contracts import (
+    HitlActionRequest,
+    SectionResponse,
+    SectionsResponse,
+    StartWorkflowRequest,
+    WorkflowResponse,
+)
 from app.schemas.state import AgentState
 
 _STATE_STORE: dict[str, AgentState] = {}
@@ -53,13 +59,40 @@ def handle_hitl_action(request: HitlActionRequest) -> WorkflowResponse:
         state["updated_section"] = request.section
         state["regeneration_mode"] = request.mode or "single"
         state = manager_node(state)
-        state = pm_node(state)
+        state = _run_execution_plan(state)
         state = hitl_node(state)
     elif request.action == "approve":
         state = _advance_after_approval(state)
 
     _STATE_STORE[request.project_id] = state
     return _to_response(state)
+
+
+def get_workflow_state(project_id: str) -> WorkflowResponse | None:
+    state = _STATE_STORE.get(project_id)
+    if state is None:
+        return None
+
+    return _to_response(state)
+
+
+def get_sections(project_id: str) -> SectionsResponse | None:
+    state = _STATE_STORE.get(project_id)
+    if state is None:
+        return None
+
+    sections: list[SectionResponse] = []
+    for artifact_type, artifact_sections in state.get("artifacts", {}).items():
+        for section_name, content in artifact_sections.items():
+            sections.append(
+                SectionResponse(
+                    artifact_type=artifact_type,
+                    section_name=section_name,
+                    content=content,
+                )
+            )
+
+    return SectionsResponse(project_id=project_id, sections=sections)
 
 
 def _apply_section_edit(state: AgentState, request: HitlActionRequest) -> None:
@@ -94,6 +127,20 @@ def _advance_after_approval(state: AgentState) -> AgentState:
     state["status"] = "completed"
     state["current_node"] = "end"
     history.append("workflow:completed")
+    return state
+
+
+def _run_execution_plan(state: AgentState) -> AgentState:
+    plan = state.get("execution_plan") or ["pm_node"]
+
+    for node_name in plan:
+        if node_name == "pm_node":
+            state = pm_node(state)
+        elif node_name == "ba_node":
+            state = ba_node(state)
+        elif node_name == "architect_node":
+            state = architect_node(state)
+
     return state
 
 

@@ -7,6 +7,8 @@ public interface IAgentServiceClient
 {
     Task<WorkflowResponse> StartWorkflowAsync(StartWorkflowRequest request, CancellationToken cancellationToken);
     Task<WorkflowResponse> SendHitlActionAsync(HitlActionRequest request, CancellationToken cancellationToken);
+    Task<WorkflowResponse?> GetWorkflowStateAsync(string projectId, CancellationToken cancellationToken);
+    Task<SectionsResponse?> GetSectionsAsync(string projectId, CancellationToken cancellationToken);
 }
 
 public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceClient
@@ -26,5 +28,28 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
         return await response.Content.ReadFromJsonAsync<WorkflowResponse>(cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException("Agent service returned an empty workflow response.");
     }
-}
 
+    public async Task<WorkflowResponse?> GetWorkflowStateAsync(string projectId, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.GetAsync($"/workflow/{projectId}/state", cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<WorkflowResponse>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<SectionsResponse?> GetSectionsAsync(string projectId, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.GetAsync($"/sections/{projectId}", cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<SectionsResponse>(cancellationToken: cancellationToken);
+    }
+}

@@ -41,8 +41,8 @@ Use Docker when you want the full environment: API, agent service, MySQL, and Ch
 
 Copy environment defaults:
 
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
 ```
 
 Build and start the stack:
@@ -158,6 +158,18 @@ Content-Type: application/json
   "projectId": "<project id>",
   "input": "Build an agentic SDLC orchestrator"
 }
+```
+
+Get workflow status:
+
+```http
+GET http://localhost:8080/workflow/<project id>/status
+```
+
+Get generated sections:
+
+```http
+GET http://localhost:8080/sections/<project id>
 ```
 
 Approve HITL:

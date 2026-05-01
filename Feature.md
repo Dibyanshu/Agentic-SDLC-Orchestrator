@@ -15,6 +15,60 @@ LangGraph will act as the orchestration engine where nodes define execution step
 
 ---
 
+## 1.1 Implementation Progress
+
+Last updated: 2026-05-01
+
+### Completed
+
+- Repository scaffold created for `.NET API`, Python agent service, Docker infra, and MySQL migrations.
+- Docker environment builds successfully for API and agent service.
+- Docker runtime verified with API, agent service, MySQL, and Chroma containers.
+- API health endpoint implemented: `GET /health`.
+- Agent service health endpoint implemented: `GET /health`.
+- Project creation implemented in API using an in-memory store: `POST /projects`.
+- Project lookup implemented in API: `GET /projects/{projectId}`.
+- Workflow start implemented through API and agent service: `POST /workflow/start`.
+- HITL action endpoint implemented through API and agent service: `POST /hitl/action`.
+- Deterministic stub workflow implemented:
+  - PRD generation
+  - HITL pause
+  - BA generation after approval
+  - HITL pause
+  - Architecture generation after approval
+  - HITL pause
+  - completion after final approval
+- Stub PM, BA, and Architect agents implemented.
+- Initial regeneration dependency resolver and regeneration planner implemented.
+- Regeneration execution now runs the planned node sequence.
+- Workflow state endpoint implemented:
+  - API: `GET /workflow/{projectId}/status`
+  - Agent service: `GET /workflow/{project_id}/state`
+- Section retrieval endpoint implemented:
+  - API: `GET /sections/{projectId}`
+  - Agent service: `GET /sections/{project_id}`
+- Local .NET build verified using `C:\Program Files\dotnet\dotnet.exe`.
+- README updated with local and Docker run instructions.
+
+### In Progress
+
+- Durable persistence integration. MySQL schema exists, but API project data and agent workflow state are still in memory.
+- Section versioning implementation. Schema exists, but write path is not yet wired to MySQL.
+- Checkpoint persistence. Schema exists, but workflow state is not yet saved to MySQL after each node.
+- Real LLM client integration. Agent outputs are currently deterministic stubs.
+- LLM logging write path. Schema exists, but calls are not yet logged because LLM execution is stubbed.
+
+### Not Started
+
+- Controlled RAG ingestion and retrieval.
+- Token budget enforcement.
+- Response caching.
+- Workflow resume from persisted checkpoint.
+- API integration tests and Python tests.
+- Frontend UI.
+
+---
+
 ## 2. Core Workflow Features
 
 ### 2.1 Initialize Project

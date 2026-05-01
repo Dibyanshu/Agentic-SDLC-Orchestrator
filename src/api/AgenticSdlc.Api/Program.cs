@@ -63,6 +63,34 @@ app.MapPost("/workflow/start", async (StartWorkflowRequest request, IProjectStor
 })
 .WithName("StartWorkflow");
 
+app.MapGet("/workflow/{projectId}/status", async (string projectId, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.GetWorkflowStateAsync(projectId, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("workflow_not_found", "Workflow state was not found."))
+        : Results.Ok(response);
+})
+.WithName("GetWorkflowStatus");
+
+app.MapGet("/sections/{projectId}", async (string projectId, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.GetSectionsAsync(projectId, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("sections_not_found", "Sections were not found."))
+        : Results.Ok(response);
+})
+.WithName("GetSections");
+
 app.MapPost("/hitl/action", async (HitlActionRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
 {
     var allowedActions = new[] { "approve", "edit", "regenerate" };
