@@ -350,6 +350,18 @@ powershell -ExecutionPolicy Bypass -File scripts/validate-openai.ps1
 
 This validation creates one project, uploads a small TXT context source, runs PM generation with OpenAI, checks PRD JSON/logs/token usage/cache key, then repeats the same request to verify the second run is cache-only. It does not approve BA or Architecture.
 
+Run the intentional Gemini validation only when you want to spend a small number of tokens through your configured `GEMINI_API_KEY`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/validate-gemini.ps1
+```
+
+This validation uses `gemini-2.5-flash` by default because some experimental model names may not support `generateContent` on the configured API version. Override it explicitly when needed:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/validate-gemini.ps1 -GeminiModel gemini-2.5-flash
+```
+
 Upload and list TXT RAG context:
 
 ```http
@@ -384,4 +396,5 @@ cd src/ui/orchestrator-ui
 npm run build
 powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
 powershell -ExecutionPolicy Bypass -File scripts/validate-openai.ps1
+powershell -ExecutionPolicy Bypass -File scripts/validate-gemini.ps1
 ```

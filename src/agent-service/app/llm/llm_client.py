@@ -161,7 +161,7 @@ class LlmClient:
                 raw_body = response.read().decode("utf-8")
         except urllib.error.HTTPError as exc:
             error_body = exc.read().decode("utf-8", errors="replace")
-            if exc.code in {400, 401, 403, 404}:
+            if exc.code in {400, 401, 403, 404, 429}:
                 raise LlmConfigurationError(f"Gemini request failed: {exc.code} {error_body}") from exc
             raise RuntimeError(f"Gemini request failed: {exc.code} {error_body}") from exc
 

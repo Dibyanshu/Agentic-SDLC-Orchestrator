@@ -90,6 +90,7 @@ Last updated: 2026-05-03
   - Python unittest coverage for RAG chunking, deterministic embeddings, context limits, and regeneration planning.
   - Docker smoke script in `scripts/smoke-test.ps1` for project creation, TXT RAG upload, workflow execution, HITL approvals, logs, metrics, and checkpoints.
   - Intentional OpenAI validation script in `scripts/validate-openai.ps1` for PM-only real-provider validation and cache verification.
+  - Intentional Gemini validation script in `scripts/validate-gemini.ps1` for PM-only real-provider validation and cache verification.
 - Cost-control slice implemented:
   - Per-agent input token budgets are enforced before LLM provider calls.
   - Default PM and BA budget: `3000` tokens.
@@ -102,6 +103,9 @@ Last updated: 2026-05-03
   - OpenAI auth/model/rate-limit style errors are treated as non-retryable provider configuration failures.
   - Failures are logged once with `configuration_error` and a useful `error_message`.
   - OpenAI validation verifies real model name, token usage, latency, cache key, PRD JSON, RAG context, and cache hit on a repeated request.
+- Gemini mode validation and hardening implemented:
+  - Gemini auth/model/rate-limit style errors are treated as non-retryable provider configuration failures.
+  - Gemini validation verifies real model name, token usage, latency, cache key, PRD JSON, RAG context, and cache hit on a repeated request.
 - Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
 - Agent service section writes now persist generated and edited sections to MySQL.
 - Section updates now create `section_versions` rows on create, regeneration, and edit paths.
@@ -112,7 +116,7 @@ Last updated: 2026-05-03
 ### In Progress
 
 - Durable persistence integration for remaining API surfaces such as workflow resume and metrics.
-- Real OpenAI PM execution is opt-in and validated through `scripts/validate-openai.ps1`. Gemini and Claude adapters are implemented but still require intentional real-provider validation.
+- Real OpenAI and Gemini PM execution are opt-in and validated through provider-specific scripts. Claude adapter is implemented but still requires intentional real-provider validation.
 - LLM logging covers PM, BA, and Architect generation. Regeneration uses the same node logging path when nodes are rerun.
 - Max refinement loop enforcement is implemented for HITL edit/regenerate actions.
 

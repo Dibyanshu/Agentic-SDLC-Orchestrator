@@ -86,6 +86,20 @@ class LlmSettingsTests(unittest.TestCase):
                 )
 
     @patch("urllib.request.urlopen")
+    def test_gemini_rate_limit_is_non_retryable_configuration_error(self, urlopen: MagicMock) -> None:
+        urlopen.side_effect = _http_error(429, "{\"error\":{\"message\":\"rate limited\"}}")
+
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "key"}, clear=False):
+            with self.assertRaises(LlmConfigurationError):
+                LlmClient().complete(
+                    "system",
+                    "user",
+                    {},
+                    AgentLlmSettings("gemini", "gemini-test", 3_000),
+                    {"Overview"},
+                )
+
+    @patch("urllib.request.urlopen")
     def test_gemini_adapter_parses_response(self, urlopen: MagicMock) -> None:
         response = MagicMock()
         response.read.return_value = json.dumps(
