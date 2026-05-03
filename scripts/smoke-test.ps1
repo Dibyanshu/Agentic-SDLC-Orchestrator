@@ -128,4 +128,30 @@ Assert-True ($metrics.llmCallCount -ge 3) "Metrics did not include expected LLM 
 $checkpoints = Invoke-Json -Method Get -Uri "$ApiBaseUrl/checkpoints/$($project.id)"
 Assert-True ($checkpoints.checkpoints.Count -ge 3) "Expected checkpoints were not found."
 
+Write-Host "Checking response cache..."
+$cacheInput = "Build a cached workflow request for deterministic PM output."
+$cacheProjectA = Invoke-Json -Method Post -Uri "$ApiBaseUrl/projects" -Body @{
+    name = "Cache A $suffix"
+    goal = "Validate response cache"
+}
+$cacheProjectB = Invoke-Json -Method Post -Uri "$ApiBaseUrl/projects" -Body @{
+    name = "Cache B $suffix"
+    goal = "Validate response cache"
+}
+
+$null = Invoke-Json -Method Post -Uri "$ApiBaseUrl/workflow/start" -Body @{
+    projectId = $cacheProjectA.id
+    input = $cacheInput
+}
+$null = Invoke-Json -Method Post -Uri "$ApiBaseUrl/workflow/start" -Body @{
+    projectId = $cacheProjectB.id
+    input = $cacheInput
+}
+
+$cacheLogs = Invoke-Json -Method Get -Uri "$ApiBaseUrl/logs/llm/$($cacheProjectB.id)"
+Assert-True ($cacheLogs.logs[0].cacheHit -eq $true) "Repeated prompt/context did not use the response cache."
+
+$cacheMetrics = Invoke-Json -Method Get -Uri "$ApiBaseUrl/metrics/workflow/$($cacheProjectB.id)"
+Assert-True ($cacheMetrics.cacheHitCount -ge 1) "Metrics did not include the cache hit."
+
 Write-Host "Smoke test passed for project $($project.id)."

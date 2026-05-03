@@ -20,7 +20,7 @@ The first implementation slice has been scaffolded:
 - MySQL migration scripts in `infra/mysql/migrations`
 - Docker Compose runtime in `infra/docker-compose.yml`
 
-The current Python workflow is a deterministic stub that can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. Project records, generated sections, section versions, checkpoints, HITL refinement logs, TXT RAG source metadata, and LLM context chunk traces are now written to MySQL. TXT context sources are indexed into Chroma and retrieved by the context builder before PM, BA, and Architect generation.
+The current Python workflow is a deterministic stub that can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. Project records, generated sections, section versions, checkpoints, HITL refinement logs, TXT RAG source metadata, LLM response cache entries, and LLM context chunk traces are now written to MySQL. TXT context sources are indexed into Chroma and retrieved by the context builder before PM, BA, and Architect generation. Agent calls enforce per-node input token budgets before the provider call and reuse cached responses for repeated prompt/context pairs.
 
 ## Prerequisites
 
@@ -316,6 +316,8 @@ Run the Docker smoke test against the running stack:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
 ```
+
+The smoke test also verifies a repeated prompt/context returns a cached LLM response and increments workflow cache-hit metrics.
 
 Upload and list TXT RAG context:
 

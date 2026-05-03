@@ -108,6 +108,17 @@ CREATE TABLE IF NOT EXISTS rag_sources (
   CONSTRAINT fk_rag_sources_projects FOREIGN KEY (project_id) REFERENCES projects(id)
 );
 
+CREATE TABLE IF NOT EXISTS llm_response_cache (
+  cache_key VARCHAR(128) PRIMARY KEY,
+  model_name VARCHAR(100) NOT NULL,
+  response_text LONGTEXT NOT NULL,
+  input_tokens INT NOT NULL DEFAULT 0,
+  output_tokens INT NOT NULL DEFAULT 0,
+  context_payload JSON NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 CREATE INDEX idx_artifacts_project_id ON artifacts(project_id);
 CREATE INDEX idx_sections_artifact_id ON sections(artifact_id);
 CREATE INDEX idx_section_versions_section_id ON section_versions(section_id);

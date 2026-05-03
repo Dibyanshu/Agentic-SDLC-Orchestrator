@@ -37,13 +37,14 @@ Completed implementation:
 - Docker Compose UI service on `http://localhost:5173`.
 - Controlled TXT RAG vertical slice with source metadata in MySQL, chunk storage/retrieval in Chroma, context injection, and `llm_context_chunks` traces.
 - Initial automated tests and Docker smoke script for the current happy path.
+- Cost controls with per-node input token budgets and MySQL-backed LLM response caching.
 
 Still pending:
 
 - Real LLM client execution validated as the default path.
 - OpenAI-mode validation as the default path.
 - RAG support for PDF, DOCX, screenshots/OCR, delete source, and advanced ranking.
-- Token budgets and response caching.
+- OpenAI validation and expanded RAG source handling.
 
 ## 1. Target Phase 1 Architecture
 
@@ -461,12 +462,12 @@ Goal: make usage measurable and bounded.
 
 Tasks:
 
-1. Enforce token budgets:
+1. Done: Enforce token budgets:
    - PM: `3000`
    - BA: `3000`
    - Architect: `4000`
 2. Add context truncation/summarization guard.
-3. Add response cache table or Redis later; start with MySQL-backed cache if Redis is not introduced.
+3. Done: Add MySQL-backed response cache table.
 4. Add metrics endpoint:
 
 ```text
@@ -485,13 +486,14 @@ Metrics:
 Status:
 
 - Done: `GET /metrics/workflow/{projectId}` exposes token totals, estimated cost, latency per node, cache hits, LLM call count, and refinement count.
-- Pending: token budget enforcement.
-- Pending: response caching.
+- Done: token budget enforcement.
+- Done: response caching.
+- Pending: context truncation/summarization guard.
 
 Acceptance criteria:
 
-- Pending: Token budget violations fail before LLM call.
-- Pending: Repeated identical prompt/context returns cached response.
+- Done: Token budget violations fail before LLM call.
+- Done: Repeated identical prompt/context returns cached response.
 - Done: Project-level metrics can be queried.
 
 ## 12. Milestone 11 - Hardening and Developer Experience
@@ -545,8 +547,8 @@ Acceptance criteria:
 
 - Partial: TXT ingestion implemented; PDF/DOCX pending
 - Done: Chroma retrieval
-- Token budget enforcement
-- Response caching
+- Done: Token budget enforcement
+- Done: Response caching
 - Done: Metrics endpoint
 - Done: UI frontend
 - Done: End-to-end Docker smoke script

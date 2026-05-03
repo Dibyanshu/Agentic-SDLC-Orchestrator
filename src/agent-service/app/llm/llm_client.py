@@ -33,15 +33,22 @@ class LlmClient:
         if self._provider == "openai":
             return self._complete_openai(system_prompt, user_prompt, context)
 
-        return self._complete_stub(user_prompt, system_prompt)
+        return self._complete_stub(user_prompt, system_prompt, context)
 
-    def _complete_stub(self, user_prompt: str, system_prompt: str) -> LlmResult:
+    def _complete_stub(
+        self,
+        user_prompt: str,
+        system_prompt: str,
+        context: dict[str, Any],
+    ) -> LlmResult:
         start = time.perf_counter()
         payload = _stub_payload(system_prompt, user_prompt)
         text = json.dumps(payload)
         return LlmResult(
             text=text,
-            input_tokens=_estimate_tokens(user_prompt),
+            input_tokens=_estimate_tokens(
+                f"{system_prompt}\n{user_prompt}\n{json.dumps(context, sort_keys=True)}"
+            ),
             output_tokens=_estimate_tokens(text),
             model="stub",
             latency_ms=int((time.perf_counter() - start) * 1000),

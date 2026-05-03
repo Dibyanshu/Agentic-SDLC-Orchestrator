@@ -83,6 +83,13 @@ Last updated: 2026-05-03
   - `.NET` API contract test project in `src/api/AgenticSdlc.Api.Tests`.
   - Python unittest coverage for RAG chunking, deterministic embeddings, context limits, and regeneration planning.
   - Docker smoke script in `scripts/smoke-test.ps1` for project creation, TXT RAG upload, workflow execution, HITL approvals, logs, metrics, and checkpoints.
+- Cost-control slice implemented:
+  - Per-node input token budgets are enforced before LLM provider calls.
+  - PM and BA budget: `3000` tokens.
+  - Architect budget: `4000` tokens.
+  - MySQL-backed LLM response cache stores successful responses by prompt/context cache key.
+  - Repeated prompt/context pairs return cached responses and log `cache_hit=true`.
+  - Workflow metrics include cache hit counts.
 - Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
 - Agent service section writes now persist generated and edited sections to MySQL.
 - Section updates now create `section_versions` rows on create, regeneration, and edit paths.
@@ -99,8 +106,6 @@ Last updated: 2026-05-03
 
 ### Not Started
 
-- Token budget enforcement.
-- Response caching.
 - Workflow resume from persisted checkpoint.
 - Broader API integration tests with isolated test database.
 
