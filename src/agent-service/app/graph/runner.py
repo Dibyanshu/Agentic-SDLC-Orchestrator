@@ -5,6 +5,7 @@ from app.graph.nodes.manager_node import manager_node
 from app.graph.nodes.pm_node import pm_node
 from app.persistence.checkpoint_store import MySqlCheckpointStore
 from app.persistence.section_store import SectionStore
+from app.logging.llm_logger import LlmLogger
 from app.schemas.contracts import (
     CheckpointResponse,
     CheckpointsResponse,
@@ -15,12 +16,15 @@ from app.schemas.contracts import (
     SectionsResponse,
     StartWorkflowRequest,
     WorkflowResponse,
+    LlmLogResponse,
+    LlmLogsResponse,
 )
 from app.schemas.state import AgentState
 
 _STATE_STORE: dict[str, AgentState] = {}
 _CHECKPOINT_STORE = MySqlCheckpointStore()
 _SECTION_STORE = SectionStore()
+_LLM_LOGGER = LlmLogger()
 
 
 def start_workflow(request: StartWorkflowRequest) -> WorkflowResponse:
@@ -250,6 +254,41 @@ def get_checkpoints(project_id: str) -> CheckpointsResponse | None:
     ]
 
     return CheckpointsResponse(project_id=project_id, checkpoints=checkpoints)
+
+
+def get_llm_logs(project_id: str) -> LlmLogsResponse:
+    rows = _LLM_LOGGER.list_by_project(project_id)
+    logs = [
+        LlmLogResponse(
+            id=row["id"],
+            project_id=row["project_id"],
+            artifact_id=row["artifact_id"],
+            section_id=row["section_id"],
+            node_name=row["node_name"],
+            agent_name=row["agent_name"],
+            model_name=row["model_name"],
+            prompt_template_version=row["prompt_template_version"],
+            system_prompt=row["system_prompt"],
+            user_prompt=row["user_prompt"],
+            context_payload=row["context_payload"],
+            response_text=row["response_text"],
+            response_format=row["response_format"],
+            status=row["status"],
+            error_message=row["error_message"],
+            input_tokens=row["input_tokens"],
+            output_tokens=row["output_tokens"],
+            total_tokens=row["total_tokens"],
+            estimated_cost=row["estimated_cost"],
+            latency_ms=row["latency_ms"],
+            cache_hit=row["cache_hit"],
+            cache_key=row["cache_key"],
+            start_time=row["start_time"],
+            end_time=row["end_time"],
+            created_at=row["created_at"],
+        )
+        for row in rows
+    ]
+    return LlmLogsResponse(project_id=project_id, logs=logs)
 
 
 def _apply_section_edit(state: AgentState, request: HitlActionRequest) -> None:

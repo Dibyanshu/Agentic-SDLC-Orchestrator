@@ -91,3 +91,40 @@ class CheckpointsResponse(BaseModel):
     checkpoints: list[CheckpointResponse]
 
     model_config = {"populate_by_name": True}
+
+
+class LlmLogResponse(BaseModel):
+    id: int
+    project_id: str = Field(alias="projectId")
+    artifact_id: str | None = Field(alias="artifactId")
+    section_id: str | None = Field(alias="sectionId")
+    node_name: str = Field(alias="nodeName")
+    agent_name: str = Field(alias="agentName")
+    model_name: str = Field(alias="modelName")
+    prompt_template_version: str | None = Field(alias="promptTemplateVersion")
+    system_prompt: str = Field(alias="systemPrompt")
+    user_prompt: str = Field(alias="userPrompt")
+    context_payload: dict[str, Any] = Field(alias="contextPayload")
+    response_text: str | None = Field(alias="responseText")
+    response_format: str = Field(alias="responseFormat")
+    status: str
+    error_message: str | None = Field(alias="errorMessage")
+    input_tokens: int = Field(alias="inputTokens")
+    output_tokens: int = Field(alias="outputTokens")
+    total_tokens: int = Field(alias="totalTokens")
+    estimated_cost: str = Field(alias="estimatedCost")
+    latency_ms: int = Field(alias="latencyMs")
+    cache_hit: bool = Field(alias="cacheHit")
+    cache_key: str | None = Field(alias="cacheKey")
+    start_time: str | None = Field(alias="startTime")
+    end_time: str | None = Field(alias="endTime")
+    created_at: str = Field(alias="createdAt")
+
+    model_config = {"populate_by_name": True}
+
+
+class LlmLogsResponse(BaseModel):
+    project_id: str = Field(alias="projectId")
+    logs: list[LlmLogResponse]
+
+    model_config = {"populate_by_name": True}

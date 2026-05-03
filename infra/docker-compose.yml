@@ -31,6 +31,8 @@ services:
       CHROMA_URL: http://chroma:8000
       DB_CONNECTION: server=mysql;port=3306;database=${MYSQL_DATABASE:-agentic_sdlc};user=${MYSQL_USER:-agentic};password=${MYSQL_PASSWORD:-agentic_password}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-stub}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
     ports:
       - "${AGENT_HOST_PORT:-8000}:8000"
     depends_on:

@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.graph.runner import (
     get_checkpoints,
+    get_llm_logs,
     get_section,
     get_section_versions,
     get_sections,
@@ -14,6 +15,7 @@ from app.schemas.contracts import (
     CheckpointsResponse,
     HealthResponse,
     HitlActionRequest,
+    LlmLogsResponse,
     SectionResponse,
     SectionVersionsResponse,
     SectionsResponse,
@@ -112,6 +114,11 @@ def project_checkpoints(project_id: str) -> CheckpointsResponse:
         raise HTTPException(status_code=404, detail="checkpoints were not found")
 
     return response
+
+
+@router.get("/logs/llm/{project_id}", response_model=LlmLogsResponse)
+def project_llm_logs(project_id: str) -> LlmLogsResponse:
+    return get_llm_logs(project_id)
 
 
 @router.post("/workflow/hitl", response_model=WorkflowResponse)

@@ -114,6 +114,14 @@ CHROMA_URL=http://localhost:8002
 
 Container-to-container traffic still uses internal service names, so changing `CHROMA_HOST_PORT` only affects access from your host machine.
 
+LLM execution defaults to the deterministic stub provider so local smoke tests do not spend tokens. To use OpenAI for PM generation, set these values in `.env`:
+
+```env
+LLM_PROVIDER=openai
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_API_KEY=<your key>
+```
+
 ## Local Run
 
 Use local run when you want to iterate on code directly from the workspace. You can still keep MySQL and Chroma in Docker.
@@ -244,6 +252,12 @@ Content-Type: application/json
 ```
 
 Approve three times to walk the current stub workflow from PRD to BA to Architecture to `completed`.
+
+Get PM LLM logs:
+
+```http
+GET http://localhost:8080/logs/llm/<project id>
+```
 
 ## Verified Commands
 

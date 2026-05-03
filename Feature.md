@@ -55,6 +55,11 @@ Last updated: 2026-05-03
   - API: `PUT /sections/{projectId}/{artifactType}/{sectionName}`
   - API: `GET /sections/{projectId}/{artifactType}/{sectionName}/versions`
   - Agent service exposes matching persisted section endpoints.
+- PM node LLM interaction logging implemented:
+  - API: `GET /logs/llm/{projectId}`
+  - Agent service: `GET /logs/llm/{project_id}`
+  - Stub provider logs prompt, response, token estimates, latency, status, and cache key.
+- Provider-ready LLM client added with opt-in OpenAI mode via `LLM_PROVIDER=openai`.
 - Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
 - Agent service section writes now persist generated and edited sections to MySQL.
 - Section updates now create `section_versions` rows on create, regeneration, and edit paths.
@@ -64,9 +69,9 @@ Last updated: 2026-05-03
 
 ### In Progress
 
-- Durable persistence integration for remaining API surfaces such as section version retrieval, LLM logs, checkpoints listing, and workflow resume.
-- Real LLM client integration. Agent outputs are currently deterministic stubs.
-- LLM logging write path. Schema exists, but calls are not yet logged because LLM execution is stubbed.
+- Durable persistence integration for remaining API surfaces such as workflow resume and metrics.
+- Real LLM execution is opt-in but not yet validated as the default path. Agent outputs still use the stub provider unless `LLM_PROVIDER=openai` is set.
+- LLM logging currently covers PM generation. BA, Architect, and regeneration LLM logging are pending real LLM integration for those nodes.
 
 ### Not Started
 

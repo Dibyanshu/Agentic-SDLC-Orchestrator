@@ -61,3 +61,34 @@ public sealed record CheckpointResponse(
 public sealed record CheckpointsResponse(
     string ProjectId,
     IReadOnlyList<CheckpointResponse> Checkpoints);
+
+public sealed record LlmLogResponse(
+    long Id,
+    string ProjectId,
+    string? ArtifactId,
+    string? SectionId,
+    string NodeName,
+    string AgentName,
+    string ModelName,
+    string? PromptTemplateVersion,
+    string SystemPrompt,
+    string UserPrompt,
+    object? ContextPayload,
+    string? ResponseText,
+    string ResponseFormat,
+    string Status,
+    string? ErrorMessage,
+    int InputTokens,
+    int OutputTokens,
+    int TotalTokens,
+    string EstimatedCost,
+    int LatencyMs,
+    bool CacheHit,
+    string? CacheKey,
+    DateTimeOffset? StartTime,
+    DateTimeOffset? EndTime,
+    DateTimeOffset CreatedAt);
+
+public sealed record LlmLogsResponse(
+    string ProjectId,
+    IReadOnlyList<LlmLogResponse> Logs);

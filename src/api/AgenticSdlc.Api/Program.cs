@@ -162,6 +162,20 @@ app.MapGet("/checkpoints/{projectId}", async (string projectId, IProjectStore st
 })
 .WithName("GetCheckpoints");
 
+app.MapGet("/logs/llm/{projectId}", async (string projectId, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.GetLlmLogsAsync(projectId, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("llm_logs_not_found", "LLM logs were not found."))
+        : Results.Ok(response);
+})
+.WithName("GetLlmLogs");
+
 app.MapPost("/hitl/action", async (HitlActionRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
 {
     var allowedActions = new[] { "approve", "edit", "regenerate" };
