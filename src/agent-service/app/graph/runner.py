@@ -15,6 +15,7 @@ from app.schemas.contracts import (
     SectionVersionsResponse,
     SectionsResponse,
     StartWorkflowRequest,
+    ResumeWorkflowRequest,
     WorkflowResponse,
     LlmLogResponse,
     LlmLogsResponse,
@@ -48,6 +49,22 @@ def start_workflow(request: StartWorkflowRequest) -> WorkflowResponse:
     _save_checkpoint(state)
     state = hitl_node(state)
     _save_checkpoint(state)
+    _STATE_STORE[request.project_id] = state
+    return _to_response(state)
+
+
+def resume_workflow(request: ResumeWorkflowRequest) -> WorkflowResponse:
+    state = _CHECKPOINT_STORE.get(request.project_id)
+    if state is None:
+        raise ValueError("workflow checkpoint was not found")
+
+    status = state.get("status")
+    current_node = state.get("current_node")
+    if status in {"paused_for_hitl", "completed"} or current_node in {"hitl_node", "end"}:
+        _STATE_STORE[request.project_id] = state
+        return _to_response(state)
+
+    state = _continue_running_state(state)
     _STATE_STORE[request.project_id] = state
     return _to_response(state)
 
@@ -342,6 +359,36 @@ def _run_execution_plan(state: AgentState) -> AgentState:
             state = architect_node(state)
             _save_artifact(state, "ARCH", node_name)
         _save_checkpoint(state)
+
+    return state
+
+
+def _continue_running_state(state: AgentState) -> AgentState:
+    current_node = state.get("current_node")
+
+    if current_node == "manager_node":
+        state = _run_execution_plan(state)
+        state = hitl_node(state)
+        _save_checkpoint(state)
+        return state
+
+    if current_node == "pm_node":
+        _save_artifact(state, "PRD", "resume:pm_node")
+        state = hitl_node(state)
+        _save_checkpoint(state)
+        return state
+
+    if current_node == "ba_node":
+        _save_artifact(state, "BA", "resume:ba_node")
+        state = hitl_node(state)
+        _save_checkpoint(state)
+        return state
+
+    if current_node == "architect_node":
+        _save_artifact(state, "ARCH", "resume:architect_node")
+        state = hitl_node(state)
+        _save_checkpoint(state)
+        return state
 
     return state
 

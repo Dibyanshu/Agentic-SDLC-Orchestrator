@@ -63,6 +63,23 @@ app.MapPost("/workflow/start", async (StartWorkflowRequest request, IProjectStor
 })
 .WithName("StartWorkflow");
 
+app.MapPost("/workflow/resume", async (ResumeWorkflowRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(request.ProjectId))
+    {
+        return Results.BadRequest(new ErrorResponse("workflow_validation_failed", "Project id is required."));
+    }
+
+    if (store.Get(request.ProjectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.ResumeWorkflowAsync(request, cancellationToken);
+    return Results.Ok(response);
+})
+.WithName("ResumeWorkflow");
+
 app.MapGet("/workflow/{projectId}/status", async (string projectId, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
 {
     if (store.Get(projectId) is null)

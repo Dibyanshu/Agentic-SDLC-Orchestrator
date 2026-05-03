@@ -15,6 +15,12 @@ class StartWorkflowRequest(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class ResumeWorkflowRequest(BaseModel):
+    project_id: str = Field(alias="projectId")
+
+    model_config = {"populate_by_name": True}
+
+
 class HitlActionRequest(BaseModel):
     project_id: str = Field(alias="projectId")
     action: str

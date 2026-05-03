@@ -206,6 +206,17 @@ Content-Type: application/json
 }
 ```
 
+Resume workflow from latest checkpoint:
+
+```http
+POST http://localhost:8080/workflow/resume
+Content-Type: application/json
+
+{
+  "projectId": "<project id>"
+}
+```
+
 Get workflow status:
 
 ```http

@@ -29,6 +29,7 @@ Last updated: 2026-05-03
 - Project creation implemented in API using MySQL persistence: `POST /projects`.
 - Project lookup implemented in API using MySQL persistence: `GET /projects/{projectId}`.
 - Workflow start implemented through API and agent service: `POST /workflow/start`.
+- Workflow resume implemented through API and agent service: `POST /workflow/resume`.
 - HITL action endpoint implemented through API and agent service: `POST /hitl/action`.
 - Deterministic stub workflow implemented:
   - PRD generation

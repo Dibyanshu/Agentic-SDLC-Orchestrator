@@ -21,7 +21,7 @@ Completed implementation:
 - Docker runtime for API, agent service, MySQL, and Chroma.
 - API and agent health endpoints.
 - MySQL-backed project creation and lookup.
-- Workflow start and status through the API.
+- Workflow start, resume, and status through the API.
 - Deterministic stub workflow: PRD -> HITL -> BA -> HITL -> Architecture -> HITL -> completed.
 - MySQL-backed artifacts, sections, section versions, checkpoints, and refinement logs.
 - Section list, detail, update, and version-history APIs.
@@ -36,9 +36,9 @@ Still pending:
 
 - Real LLM client execution validated as the default path.
 - OpenAI-mode validation as the default path.
-- Workflow resume endpoint.
 - Max refinement loop enforcement.
 - REACT UI creation and integration [Feature-UI.md]
+- Docker adjustments for the new REACT UI
 - Controlled RAG ingestion and retrieval.
 - Token budgets, response caching, and metrics.
 
@@ -204,7 +204,7 @@ Acceptance criteria:
 - Done: Project, workflow start/status, sections, section detail, section update, section versions, HITL action, and checkpoints endpoints exist.
 - Done: Invalid HITL actions fail with `400`.
 - Done: API can call the agent service.
-- Pending: `POST /workflow/resume`.
+- Done: `POST /workflow/resume`.
 - Done: `GET /logs/llm/{projectId}`.
 - Pending: automated tests for project creation, section update, and HITL validation.
 - Pending: normalize all downstream agent-service errors into structured API errors instead of relying on `EnsureSuccessStatusCode`.
@@ -265,7 +265,7 @@ Acceptance criteria:
 - Done: Checkpoint is saved after node transitions.
 - Done: sections, versions, checkpoints, and HITL refinement logs are persisted.
 - Pending: replace manual runner with compiled LangGraph graph if strict LangGraph execution is required for the demo.
-- Pending: `POST /workflow/resume`.
+- Done: `POST /workflow/resume`.
 
 ## 6. Milestone 5 - First Vertical Slice: Project to PRD to HITL
 
@@ -513,7 +513,7 @@ Acceptance criteria:
 - Done: Docker Compose with MySQL and Chroma
 - Done: Project API
 - Done: Section API with versioning
-- Partial: Workflow start/resume. Start exists; resume is pending.
+- Done: Workflow start/resume.
 - Partial: LangGraph skeleton. Deterministic runner exists; compiled LangGraph graph is pending if required.
 - Partial: PM, BA, Architect nodes. Deterministic stubs exist; real LLM execution is pending.
 - Partial: HITL approve/edit/regenerate. Main flow exists; loop limit is pending.

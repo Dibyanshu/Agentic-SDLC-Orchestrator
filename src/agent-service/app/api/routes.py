@@ -8,6 +8,7 @@ from app.graph.runner import (
     get_sections,
     get_workflow_state,
     handle_hitl_action,
+    resume_workflow,
     start_workflow,
     update_section,
 )
@@ -19,6 +20,7 @@ from app.schemas.contracts import (
     SectionResponse,
     SectionVersionsResponse,
     SectionsResponse,
+    ResumeWorkflowRequest,
     StartWorkflowRequest,
     UpdateSectionRequest,
     WorkflowResponse,
@@ -38,6 +40,17 @@ def workflow_start(request: StartWorkflowRequest) -> WorkflowResponse:
         raise HTTPException(status_code=400, detail="project_id and input are required")
 
     return start_workflow(request)
+
+
+@router.post("/workflow/resume", response_model=WorkflowResponse)
+def workflow_resume(request: ResumeWorkflowRequest) -> WorkflowResponse:
+    if not request.project_id.strip():
+        raise HTTPException(status_code=400, detail="project_id is required")
+
+    try:
+        return resume_workflow(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/workflow/{project_id}/state", response_model=WorkflowResponse)

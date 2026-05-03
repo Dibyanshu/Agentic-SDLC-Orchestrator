@@ -10,6 +10,8 @@ public sealed record ProjectResponse(string Id, string Name, string Goal, DateTi
 
 public sealed record StartWorkflowRequest(string ProjectId, string Input);
 
+public sealed record ResumeWorkflowRequest(string ProjectId);
+
 public sealed record HitlActionRequest(
     string ProjectId,
     string Action,
