@@ -1,12 +1,12 @@
 from typing import Any
 
+from app.context.chroma_client import get_collection
 from app.context.embeddings import embed_text
-from app.context.rag_ingestion import get_rag_collection
 
 
 def retrieve_rag_chunks(project_id: str, stage: str, top_k: int = 5) -> list[dict[str, object]]:
     try:
-        collection = get_rag_collection()
+        collection = get_collection()
         result = collection.query(
             query_embeddings=[embed_text(stage)],
             n_results=top_k,

@@ -5,11 +5,10 @@ from typing import Any
 
 from app.context.chroma_client import get_collection
 from app.context.embeddings import embed_text
+from app.context.text_chunker import chunk_text
 from app.persistence.mysql_client import MysqlClient
 
 MAX_SOURCE_CHARS = 200_000
-CHUNK_SIZE = 1_200
-CHUNK_OVERLAP = 160
 
 
 class RagSourceStore:
@@ -127,7 +126,7 @@ def ingest_txt_source(project_id: str, file_name: str, content: str) -> dict[str
     if len(normalized) > MAX_SOURCE_CHARS:
         raise ValueError(f"source content must be {MAX_SOURCE_CHARS} characters or fewer")
 
-    chunks = _chunk_text(normalized)
+    chunks = chunk_text(normalized)
     source_hash = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
     source = RagSourceStore().save_source(
         project_id=project_id,
@@ -164,19 +163,3 @@ def list_rag_sources(project_id: str) -> list[dict[str, Any]]:
 
 def get_rag_collection():
     return get_collection()
-
-
-def _chunk_text(text: str) -> list[str]:
-    paragraphs = [paragraph.strip() for paragraph in text.splitlines() if paragraph.strip()]
-    collapsed = "\n".join(paragraphs) if paragraphs else text
-    chunks: list[str] = []
-    cursor = 0
-
-    while cursor < len(collapsed):
-        end = min(cursor + CHUNK_SIZE, len(collapsed))
-        chunks.append(collapsed[cursor:end].strip())
-        if end == len(collapsed):
-            break
-        cursor = max(end - CHUNK_OVERLAP, cursor + 1)
-
-    return chunks

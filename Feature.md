@@ -79,6 +79,10 @@ Last updated: 2026-05-03
   - Context builder retrieves up to 3 Chroma chunks for PM, BA, and Architect generation.
   - Retrieved chunks are traced in `llm_context_chunks`.
   - UI supports TXT context upload and source listing.
+- Initial automated verification implemented:
+  - `.NET` API contract test project in `src/api/AgenticSdlc.Api.Tests`.
+  - Python unittest coverage for RAG chunking, deterministic embeddings, context limits, and regeneration planning.
+  - Docker smoke script in `scripts/smoke-test.ps1` for project creation, TXT RAG upload, workflow execution, HITL approvals, logs, metrics, and checkpoints.
 - Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
 - Agent service section writes now persist generated and edited sections to MySQL.
 - Section updates now create `section_versions` rows on create, regeneration, and edit paths.
@@ -98,7 +102,7 @@ Last updated: 2026-05-03
 - Token budget enforcement.
 - Response caching.
 - Workflow resume from persisted checkpoint.
-- API integration tests and Python tests.
+- Broader API integration tests with isolated test database.
 
 ---
 

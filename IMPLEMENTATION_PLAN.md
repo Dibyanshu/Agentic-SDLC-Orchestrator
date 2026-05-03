@@ -36,6 +36,7 @@ Completed implementation:
 - React UI console for project creation, workflow start/resume, section editing/history, HITL actions, agent progress, logs, and metrics.
 - Docker Compose UI service on `http://localhost:5173`.
 - Controlled TXT RAG vertical slice with source metadata in MySQL, chunk storage/retrieval in Chroma, context injection, and `llm_context_chunks` traces.
+- Initial automated tests and Docker smoke script for the current happy path.
 
 Still pending:
 
@@ -84,7 +85,7 @@ docs/
   decisions/
 ```
 
-Note: `AgenticSdlc.Api.Tests`, Python tests, shared contracts, and docs folders are still pending.
+Note: broader integration tests, shared contracts, and docs folders are still pending.
 
 ## 2. Milestone Execution Order
 
@@ -126,7 +127,8 @@ Acceptance criteria:
 - Done: `Python Agent Service` exposes `GET /health`.
 - Done: React UI exposes `GET http://localhost:5173`.
 - Done: README contains first-run instructions using `.env`.
-- Pending: create dedicated `.NET` and Python test projects.
+- Done: create dedicated `.NET` API contract test project.
+- Done: create Python unit test folder for agent-service logic.
 
 ## 3. Milestone 2 - Database Foundation
 
@@ -213,7 +215,7 @@ Acceptance criteria:
 - Done: API can call the agent service.
 - Done: `POST /workflow/resume`.
 - Done: `GET /logs/llm/{projectId}`.
-- Pending: automated tests for project creation, section update, and HITL validation.
+- Partial: automated API contract tests exist; live project, RAG, HITL, metrics, and checkpoint path is covered by Docker smoke script.
 - Pending: normalize all downstream agent-service errors into structured API errors instead of relying on `EnsureSuccessStatusCode`.
 
 ## 5. Milestone 4 - Python Agent Service Skeleton
@@ -517,7 +519,9 @@ create project -> start workflow -> generate PRD -> approve -> generate BA -> ap
 Acceptance criteria:
 
 - One command starts local runtime.
-- One command runs all tests.
+- Done: one command runs `.NET` API tests with `dotnet test AgenticSdlc.sln`.
+- Done: one command runs Python unit tests with `python -m unittest discover -s src/agent-service/tests`.
+- Done: Docker smoke script exercises project creation, TXT RAG upload, workflow generation, HITL approvals, logs, metrics, and checkpoints.
 - Failed LLM calls are visible in logs.
 - Checkpoint resume works after service restart.
 
@@ -545,7 +549,7 @@ Acceptance criteria:
 - Response caching
 - Done: Metrics endpoint
 - Done: UI frontend
-- End-to-end smoke tests
+- Done: End-to-end Docker smoke script
 
 ### P2 - Later
 
@@ -621,8 +625,10 @@ For this local working session, a milestone should also be validated with:
 
 - `python -m compileall src/agent-service/app`
 - `& 'C:\Program Files\dotnet\dotnet.exe' build src/api/AgenticSdlc.Api/AgenticSdlc.Api.csproj`
+- `dotnet test AgenticSdlc.sln`
+- `python -m unittest discover -s src/agent-service/tests`
 - `docker compose --env-file .env -f infra/docker-compose.yml up -d --build api agent-service`
-- A smoke test through the `.NET API` control plane.
+- `powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1`
 
 ## 16. Key Engineering Decisions
 

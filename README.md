@@ -187,6 +187,14 @@ cd src/ui/orchestrator-ui
 npm run build
 ```
 
+Run automated tests:
+
+```powershell
+dotnet test AgenticSdlc.sln
+$env:PYTHONPATH='src/agent-service'
+python -m unittest discover -s src/agent-service/tests
+```
+
 ## Smoke Test
 
 API health:
@@ -303,6 +311,12 @@ Get workflow metrics:
 GET http://localhost:8080/metrics/workflow/<project id>
 ```
 
+Run the Docker smoke test against the running stack:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
+```
+
 Upload and list TXT RAG context:
 
 ```http
@@ -329,7 +343,11 @@ docker compose --env-file .env -f infra/docker-compose.yml up -d
 Invoke-RestMethod -Uri http://localhost:8000/health
 Invoke-RestMethod -Uri http://localhost:8080/health
 & 'C:\Program Files\dotnet\dotnet.exe' build src/api/AgenticSdlc.Api/AgenticSdlc.Api.csproj
+dotnet test AgenticSdlc.sln
 python -m compileall src/agent-service/app
+$env:PYTHONPATH='src/agent-service'
+python -m unittest discover -s src/agent-service/tests
 cd src/ui/orchestrator-ui
 npm run build
+powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
 ```
