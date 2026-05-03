@@ -124,6 +124,10 @@ class LlmClient:
         api_key = os.getenv("GEMINI_API_KEY", "").strip()
         if not api_key:
             raise LlmConfigurationError("GEMINI_API_KEY is required for Gemini provider.")
+        if any(character.isspace() for character in settings.model):
+            raise LlmConfigurationError(
+                "Gemini model must be an API model id without spaces, for example gemini-2.5-flash."
+            )
 
         start = time.perf_counter()
         request_payload = {

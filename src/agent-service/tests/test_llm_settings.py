@@ -26,6 +26,10 @@ class LlmSettingsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_agent_settings(AgentLlmSettings("stub", "stub", 10))
 
+    def test_provider_model_display_name_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            validate_agent_settings(AgentLlmSettings("gemini", "Gemini 1.5 Pro", 3_000))
+
     def test_cache_key_includes_provider_model_and_budget(self) -> None:
         base = AgentLlmSettings("stub", "stub", 3_000)
         changed = AgentLlmSettings("stub", "stub-v2", 3_000)
@@ -96,6 +100,17 @@ class LlmSettingsTests(unittest.TestCase):
                     "user",
                     {},
                     AgentLlmSettings("gemini", "gemini-test", 3_000),
+                    {"Overview"},
+                )
+
+    def test_gemini_display_name_is_configuration_error(self) -> None:
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "key"}, clear=False):
+            with self.assertRaises(LlmConfigurationError):
+                LlmClient().complete(
+                    "system",
+                    "user",
+                    {},
+                    AgentLlmSettings("gemini", "Gemini 1.5 Pro", 3_000),
                     {"Overview"},
                 )
 

@@ -56,7 +56,7 @@ export function Dashboard() {
   } = useAppStore();
   const [projectName, setProjectName] = useState("Demo");
   const [projectGoal, setProjectGoal] = useState("Generate early SDLC artifacts");
-  const [workflowInput, setWorkflowInput] = useState("Build an agentic SDLC orchestrator with HITL controls");
+  const [workflowInput, setWorkflowInput] = useState("Generate early SDLC artifacts");
   const [draft, setDraft] = useState("");
   const [hitlInput, setHitlInput] = useState("");
   const [mode, setMode] = useState<"single" | "cascade">("single");

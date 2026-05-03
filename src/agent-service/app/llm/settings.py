@@ -64,5 +64,9 @@ def validate_agent_settings(settings: AgentLlmSettings) -> None:
         raise ValueError(f"provider must be one of: {', '.join(PROVIDERS)}")
     if not settings.model.strip():
         raise ValueError("model is required")
+    if settings.provider in {"gemini", "openai", "claude"} and any(
+        character.isspace() for character in settings.model
+    ):
+        raise ValueError("model must be an API model id without spaces")
     if settings.token_budget < 100 or settings.token_budget > 200_000:
         raise ValueError("tokenBudget must be between 100 and 200000")

@@ -1,4 +1,3 @@
-```markdown
 # Feature List – Agentic SDLC Orchestrator (Phase 1)
 
 ## 1. Overview
@@ -127,7 +126,6 @@ Last updated: 2026-05-03
 - Workflow resume from persisted checkpoint.
 - Broader API integration tests with isolated test database.
 
----
 
 ## 2. Core Workflow Features
 
@@ -138,15 +136,15 @@ POST /projects
 **Input**
 ```json
 {
-"name": "string",
-"goal": "string"
+  "name": "string",
+  "goal": "string"
 }
 ```
 
 **Output**
 ```json
 {
-"project_id": "string"
+  "project_id": "string"
 }
 ```
 
@@ -159,8 +157,8 @@ POST /workflow/start
 **Input**
 ```json
 {
-"project_id": "string",
-"input": "raw business requirement"
+  "project_id": "string",
+  "input": "raw business requirement"
 }
 ```
 
@@ -193,17 +191,17 @@ Implement StateGraph with nodes:
 ### 3.2 Graph State Structure
 ```json
 {
-project_id: string,
-current_node: string,
-artifacts: {
-PRD: {},
-BA: {},
-ARCH: {}
-},
-updated_section: string | null,
-regeneration_mode: "none | single | cascade",
-context_cache: [],
-execution_plan: []
+  project_id: string,
+  current_node: string,
+  artifacts: {
+  PRD: {},
+  BA: {},
+  ARCH: {}
+  },
+  updated_section: string | null,
+  regeneration_mode: "none | single | cascade",
+  context_cache: [],
+  execution_plan: []
 }
 ```
 
@@ -270,11 +268,11 @@ POST /hitl/action
 **Input**
 ```json
 {
-"project_id": "string",
-"action": "approve | edit | regenerate",
-"section": "PRD.Features",
-"content": "optional",
-"mode": "single | cascade"
+  "project_id": "string",
+  "action": "approve | edit | regenerate",
+  "section": "PRD.Features",
+  "content": "optional",
+  "mode": "single | cascade"
 }
 ```
 
@@ -361,9 +359,9 @@ else:
 ### 8.3 Output
 ```json
 {
-summary: "...",
-rag_chunks: [],
-constraints: []
+  summary: "...",
+  rag_chunks: [],
+  constraints: []
 }
 ```
 
@@ -574,4 +572,3 @@ The system must follow:
 - strict state management
 
 LangGraph enables durable execution, human-in-the-loop control, and stateful workflows, making it suitable for this architecture. :contentReference[oaicite:2]{index=2}
-```
