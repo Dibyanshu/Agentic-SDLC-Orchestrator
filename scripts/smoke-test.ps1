@@ -89,6 +89,19 @@ Assert-True ($source.chunkCount -gt 0) "RAG source had no chunks."
 $sources = Invoke-Json -Method Get -Uri "$ApiBaseUrl/rag/sources/$($project.id)"
 Assert-True ($sources.sources.Count -ge 1) "RAG source was not listed."
 
+Write-Host "Deleting temporary RAG source..."
+$deleteSource = Invoke-Json -Method Post -Uri "$ApiBaseUrl/rag/sources" -Body @{
+    projectId = $project.id
+    fileName = "delete-me.txt"
+    content = "Temporary context source for delete validation."
+    sourceType = "txt"
+}
+Assert-True (-not [string]::IsNullOrWhiteSpace($deleteSource.id)) "Temporary RAG source id was empty."
+
+Invoke-RestMethod -Method Delete -Uri "$ApiBaseUrl/rag/sources/$($deleteSource.id)"
+$sourcesAfterDelete = Invoke-Json -Method Get -Uri "$ApiBaseUrl/rag/sources/$($project.id)"
+Assert-True (($sourcesAfterDelete.sources | Where-Object { $_.id -eq $deleteSource.id }).Count -eq 0) "Deleted RAG source was still listed."
+
 Write-Host "Saving per-agent LLM settings..."
 $settings = Invoke-Json -Method Put -Uri "$ApiBaseUrl/projects/$($project.id)/llm-settings" -Body @{
     agents = @{

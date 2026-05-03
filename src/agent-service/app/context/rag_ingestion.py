@@ -88,6 +88,52 @@ class RagSourceStore:
             for row in rows
         ]
 
+    def get_source(self, source_id: str) -> dict[str, Any] | None:
+        self._ensure_table()
+        with self._mysql.connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT id, project_id, file_name, source_type, content_hash, chunk_count, created_at
+                    FROM rag_sources
+                    WHERE id = %s
+                    """,
+                    (source_id,),
+                )
+                row = cursor.fetchone()
+
+        if row is None:
+            return None
+
+        return {
+            "id": row["id"],
+            "project_id": row["project_id"],
+            "file_name": row["file_name"],
+            "source_type": row["source_type"],
+            "content_hash": row["content_hash"],
+            "chunk_count": row["chunk_count"],
+            "created_at": row["created_at"].isoformat(),
+        }
+
+    def delete_source(self, source_id: str) -> bool:
+        self._ensure_table()
+        with self._mysql.connect() as connection:
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        DELETE FROM rag_sources
+                        WHERE id = %s
+                        """,
+                        (source_id,),
+                    )
+                    deleted = cursor.rowcount > 0
+                connection.commit()
+                return deleted
+            except Exception:
+                connection.rollback()
+                raise
+
     def _ensure_table(self) -> None:
         with self._mysql.connect() as connection:
             try:
@@ -173,6 +219,18 @@ def ingest_txt_source(project_id: str, file_name: str, content: str) -> dict[str
 
 def list_rag_sources(project_id: str) -> list[dict[str, Any]]:
     return RagSourceStore().list_sources(project_id)
+
+
+def delete_rag_source(source_id: str) -> dict[str, Any] | None:
+    store = RagSourceStore()
+    source = store.get_source(source_id)
+    if source is None:
+        return None
+
+    collection = get_collection()
+    collection.delete(where={"source_id": source_id})
+    store.delete_source(source_id)
+    return source
 
 
 def get_rag_collection():

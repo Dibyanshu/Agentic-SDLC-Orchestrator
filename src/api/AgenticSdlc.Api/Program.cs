@@ -337,6 +337,27 @@ app.MapGet("/rag/sources/{projectId}", async (string projectId, IProjectStore st
 })
 .WithName("GetRagSources");
 
+app.MapDelete("/rag/sources/{sourceId}", async (string sourceId, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(sourceId))
+    {
+        return Results.BadRequest(new ErrorResponse("rag_source_validation_failed", "Source id is required."));
+    }
+
+    try
+    {
+        var deleted = await agentClient.DeleteRagSourceAsync(sourceId, cancellationToken);
+        return deleted
+            ? Results.NoContent()
+            : Results.NotFound(new ErrorResponse("rag_source_not_found", "RAG source was not found."));
+    }
+    catch (AgentServiceException exc)
+    {
+        return Results.Problem(exc.Message, statusCode: (int)exc.StatusCode);
+    }
+})
+.WithName("DeleteRagSource");
+
 app.MapPost("/hitl/action", async (HitlActionRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
 {
     var allowedActions = new[] { "approve", "edit", "regenerate" };

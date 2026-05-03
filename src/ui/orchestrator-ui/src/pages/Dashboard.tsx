@@ -14,6 +14,7 @@ import { Textarea } from "../components/ui/Textarea";
 import { AppLayout } from "../layouts/AppLayout";
 import {
   createProject,
+  deleteRagSource,
   getLlmProviders,
   getLogs,
   getMetrics,
@@ -153,6 +154,14 @@ export function Dashboard() {
       await uploadRagSource(project.id, file.name, content, sourceType);
       setSources(await getRagSources(project.id));
     }, "Context source indexed");
+  }
+
+  async function handleSourceDelete(sourceId: string) {
+    if (!project) return;
+    await runAction(async () => {
+      await deleteRagSource(sourceId);
+      setSources(await getRagSources(project.id));
+    }, "Context source deleted");
   }
 
   async function handleStart() {
@@ -309,6 +318,7 @@ export function Dashboard() {
           onProjectGoalChange={setProjectGoal}
           onCreate={handleCreate}
           onSourceUpload={handleSourceUpload}
+          onSourceDelete={handleSourceDelete}
           sources={sources}
           busy={busy}
         />

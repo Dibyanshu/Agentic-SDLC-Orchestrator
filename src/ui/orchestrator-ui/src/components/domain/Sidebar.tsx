@@ -1,4 +1,4 @@
-import { Activity, FileText, ListChecks, Network, ScrollText, Upload } from "lucide-react";
+import { Activity, FileText, ListChecks, Network, ScrollText, Trash2, Upload } from "lucide-react";
 import type { ArtifactType, Project, RagSource, WorkflowMetrics } from "../../types/api";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -14,6 +14,7 @@ type SidebarProps = {
   onProjectGoalChange: (value: string) => void;
   onCreate: () => void;
   onSourceUpload: (file: File) => void;
+  onSourceDelete: (sourceId: string) => void;
   sources: RagSource[];
   busy: boolean;
 };
@@ -35,6 +36,7 @@ export function Sidebar({
   onProjectGoalChange,
   onCreate,
   onSourceUpload,
+  onSourceDelete,
   sources,
   busy,
 }: SidebarProps) {
@@ -92,11 +94,22 @@ export function Sidebar({
             <div className="text-xs text-slate-500">No context sources.</div>
           ) : (
             sources.map((source) => (
-              <div key={source.id} className="rounded-md border border-slate-200 px-2 py-1.5">
-                <div className="truncate text-xs font-semibold text-slate-700">{source.fileName}</div>
-                <div className="text-xs text-slate-500">
-                  {source.sourceType.toUpperCase()} - {source.chunkCount} chunks
+              <div key={source.id} className="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1.5">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-semibold text-slate-700">{source.fileName}</div>
+                  <div className="text-xs text-slate-500">
+                    {source.sourceType.toUpperCase()} - {source.chunkCount} chunks
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  disabled={busy}
+                  title="Delete context source"
+                  onClick={() => onSourceDelete(source.id)}
+                  className="flex h-7 w-7 flex-none items-center justify-center rounded-md text-slate-500 hover:bg-rose-50 hover:text-rose-700 disabled:text-slate-300"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             ))
           )}

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.context.rag_ingestion import ingest_source, list_rag_sources
+from app.context.rag_ingestion import delete_rag_source, ingest_source, list_rag_sources
 from app.llm.llm_client import LlmConfigurationError
 from app.llm.settings import AgentLlmSettings
 from app.llm.token_budget import TokenBudgetExceededError
@@ -218,6 +218,15 @@ def rag_source_create(request: RagSourceCreateRequest) -> RagSourceResponse:
 @router.get("/rag/sources/{project_id}", response_model=RagSourcesResponse)
 def rag_sources(project_id: str) -> RagSourcesResponse:
     return RagSourcesResponse(projectId=project_id, sources=list_rag_sources(project_id))
+
+
+@router.delete("/rag/sources/{source_id}", status_code=204)
+def rag_source_delete(source_id: str) -> None:
+    source = delete_rag_source(source_id.strip())
+    if source is None:
+        raise HTTPException(status_code=404, detail="RAG source was not found")
+
+    return None
 
 
 @router.post("/workflow/hitl", response_model=WorkflowResponse)

@@ -44,7 +44,7 @@ Completed implementation:
 Still pending:
 
 - Real LLM client execution validated intentionally for Claude.
-- RAG support for screenshots/OCR, delete source, and advanced ranking.
+- RAG support for screenshots/OCR and advanced ranking.
 
 ## 1. Target Phase 1 Architecture
 
@@ -446,14 +446,16 @@ Tasks:
 5. Done: Generate deterministic local embeddings for parsed source chunks.
 6. Done: Store chunks in Chroma with project and source tags.
 7. Done: Retrieve top 5, filter to top 3 in Context Builder.
-8. Pending: deduplicate chunks before prompt construction.
-9. Pending: delete source and remove related Chroma chunks.
+8. Done: deduplicate chunks before prompt construction.
+9. Done: delete source and remove related Chroma chunks.
 
 Acceptance criteria:
 
 - Done: Uploaded TXT, PDF, and DOCX documents can be parsed, chunked, and indexed for workflow context.
 - Done: Uploaded TXT document can influence PRD generation through the Docker smoke path.
 - Done: Context Builder returns at most 3 chunks.
+- Done: Context Builder deduplicates repeated chunks before applying the top-3 limit.
+- Done: RAG sources can be deleted from MySQL and Chroma.
 - Done: LLM logs record which chunks were injected through `llm_context_chunks`.
 - Agents do not call retrieval directly.
 
@@ -525,6 +527,7 @@ Acceptance criteria:
 - Done: one command runs `.NET` API tests with `dotnet test AgenticSdlc.sln`.
 - Done: one command runs Python unit tests with `python -m unittest discover -s src/agent-service/tests`.
 - Done: Docker smoke script exercises project creation, TXT RAG upload, workflow generation, HITL approvals, logs, metrics, and checkpoints.
+- Done: Docker smoke script exercises RAG source deletion.
 - Done: Python tests cover TXT, PDF, and DOCX parsing.
 - Done: OpenAI validation script exercises PM-only real-provider generation and cache hit behavior.
 - Done: Gemini validation script exercises PM-only real-provider generation and cache hit behavior.

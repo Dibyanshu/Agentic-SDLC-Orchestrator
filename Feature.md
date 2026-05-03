@@ -84,8 +84,9 @@ Last updated: 2026-05-03
   - Agent service parses TXT content directly and extracts text from PDF/DOCX base64 file payloads.
   - Agent service chunks parsed content and stores embeddings in Chroma.
   - Context builder retrieves up to 3 Chroma chunks for PM, BA, and Architect generation.
+  - Context builder deduplicates repeated chunks before prompt construction.
   - Retrieved chunks are traced in `llm_context_chunks`.
-  - UI supports TXT, PDF, and DOCX context upload and source listing.
+  - UI supports TXT, PDF, and DOCX context upload, source listing, source deletion, and RAG source visibility in expanded LLM logs.
 - Initial automated verification implemented:
   - `.NET` API contract test project in `src/api/AgenticSdlc.Api.Tests`.
   - Python unittest coverage for RAG parsing, chunking, deterministic embeddings, context limits, and regeneration planning.

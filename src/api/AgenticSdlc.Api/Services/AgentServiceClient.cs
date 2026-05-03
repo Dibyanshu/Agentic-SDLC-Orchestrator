@@ -24,6 +24,7 @@ public interface IAgentServiceClient
     Task<WorkflowMetricsResponse?> GetWorkflowMetricsAsync(string projectId, CancellationToken cancellationToken);
     Task<RagSourceResponse> CreateRagSourceAsync(RagSourceCreateRequest request, CancellationToken cancellationToken);
     Task<RagSourcesResponse?> GetRagSourcesAsync(string projectId, CancellationToken cancellationToken);
+    Task<bool> DeleteRagSourceAsync(string sourceId, CancellationToken cancellationToken);
     Task<LlmProvidersResponse> GetLlmProvidersAsync(CancellationToken cancellationToken);
     Task<ProjectLlmSettingsResponse?> GetProjectLlmSettingsAsync(string projectId, CancellationToken cancellationToken);
     Task<ProjectLlmSettingsResponse> UpdateProjectLlmSettingsAsync(string projectId, ProjectLlmSettingsUpdateRequest request, CancellationToken cancellationToken);
@@ -210,6 +211,23 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
 
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<RagSourcesResponse>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<bool> DeleteRagSourceAsync(string sourceId, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.DeleteAsync($"/rag/sources/{Escape(sourceId)}", cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return false;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new AgentServiceException(response.StatusCode, ExtractErrorMessage(message));
+        }
+
+        return true;
     }
 
     public async Task<LlmProvidersResponse> GetLlmProvidersAsync(CancellationToken cancellationToken)

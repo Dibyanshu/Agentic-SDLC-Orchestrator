@@ -36,6 +36,7 @@ export function LogsTable({ logs }: LogsTableProps) {
                 {openId === log.id ? (
                   <tr key={`${log.id}-detail`} className="border-t border-slate-100 bg-slate-50">
                     <td colSpan={5} className="space-y-2 px-4 py-3 text-xs text-slate-600">
+                      <ContextSources log={log} />
                       <div className="font-semibold text-slate-800">Prompt</div>
                       <pre className="whitespace-pre-wrap rounded bg-white p-3">{log.userPrompt}</pre>
                       <div className="font-semibold text-slate-800">Response</div>
@@ -50,5 +51,34 @@ export function LogsTable({ logs }: LogsTableProps) {
         {logs.length === 0 ? <div className="p-4 text-sm text-slate-500">No logs yet.</div> : null}
       </div>
     </Card>
+  );
+}
+
+function ContextSources({ log }: { log: LlmLog }) {
+  const chunks = log.contextPayload?.rag_chunks ?? [];
+  if (chunks.length === 0) {
+    return null;
+  }
+
+  const labels = Array.from(
+    new Set(
+      chunks.map((chunk) => {
+        const sourceType = String(chunk.source_type ?? "txt").toUpperCase();
+        return `${chunk.file_name ?? chunk.chunk_id ?? "source"} (${sourceType})`;
+      }),
+    ),
+  );
+
+  return (
+    <div>
+      <div className="font-semibold text-slate-800">RAG Sources</div>
+      <div className="mt-1 flex flex-wrap gap-1">
+        {labels.map((label) => (
+          <span key={label} className="rounded bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
+            {label}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

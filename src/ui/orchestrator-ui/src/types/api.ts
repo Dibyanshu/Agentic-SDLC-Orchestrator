@@ -36,6 +36,14 @@ export type LlmLog = {
   nodeName: string;
   agentName: string;
   modelName: string;
+  contextPayload?: {
+    rag_chunks?: Array<{
+      chunk_id?: string;
+      file_name?: string;
+      source_type?: string;
+      relevance_score?: number;
+    }>;
+  };
   status: string;
   inputTokens: number;
   outputTokens: number;

@@ -376,9 +376,11 @@ Content-Type: application/json
 }
 
 GET http://localhost:8080/rag/sources/<project id>
+
+DELETE http://localhost:8080/rag/sources/<source id>
 ```
 
-Supported `sourceType` values are `txt`, `pdf`, and `docx`. For `txt`, send plain text in `content`. For `pdf` and `docx`, send base64-encoded file bytes in `content`; the React UI handles this automatically when uploading `.txt`, `.pdf`, or `.docx` files.
+Supported `sourceType` values are `txt`, `pdf`, and `docx`. For `txt`, send plain text in `content`. For `pdf` and `docx`, send base64-encoded file bytes in `content`; the React UI handles this automatically when uploading `.txt`, `.pdf`, or `.docx` files. Deleting a source removes both its MySQL metadata and its Chroma chunks.
 
 ## Verified Commands
 

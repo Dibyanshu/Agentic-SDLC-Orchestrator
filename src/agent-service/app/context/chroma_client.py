@@ -45,6 +45,12 @@ class ChromaCollection:
             },
         )
 
+    def delete(self, where: dict[str, Any]) -> None:
+        _post_json(
+            f"{self._base_url}/api/v1/collections/{self._collection_id}/delete",
+            {"where": where},
+        )
+
 
 def get_collection() -> ChromaCollection:
     base_url = os.getenv("CHROMA_URL", "http://localhost:8000").rstrip("/")

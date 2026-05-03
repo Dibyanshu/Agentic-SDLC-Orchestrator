@@ -106,6 +106,10 @@ export async function getRagSources(projectId: string): Promise<RagSource[]> {
   return response.data.sources;
 }
 
+export async function deleteRagSource(sourceId: string): Promise<void> {
+  await client.delete(`/rag/sources/${sourceId}`);
+}
+
 export async function getLlmProviders(): Promise<LlmProviderInfo[]> {
   const response = await client.get<{ providers: LlmProviderInfo[] }>("/llm/providers");
   return response.data.providers;
