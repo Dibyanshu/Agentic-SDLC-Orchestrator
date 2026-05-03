@@ -53,4 +53,7 @@ def workflow_hitl(request: HitlActionRequest) -> WorkflowResponse:
     if request.action not in {"approve", "edit", "regenerate"}:
         raise HTTPException(status_code=400, detail="action must be approve, edit, or regenerate")
 
-    return handle_hitl_action(request)
+    try:
+        return handle_hitl_action(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

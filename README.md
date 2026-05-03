@@ -19,7 +19,7 @@ The first implementation slice has been scaffolded:
 - MySQL migration scripts in `infra/mysql/migrations`
 - Docker Compose runtime in `infra/docker-compose.yml`
 
-The current Python workflow is a deterministic stub that can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. The LLM, RAG, and durable persistence adapters are scaffolded for the next implementation slice.
+The current Python workflow is a deterministic stub that can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. Project records, generated sections, section versions, checkpoints, and HITL refinement logs are now written to MySQL. The LLM and RAG adapters are scaffolded for the next implementation slice.
 
 ## Prerequisites
 
@@ -51,6 +51,30 @@ Build and start the stack:
 docker compose --env-file .env -f infra/docker-compose.yml up --build -d
 ```
 
+If Docker fails during the API `dotnet publish` build step with a Go/runtime hook error such as `fatal error: invalid runtime symbol table`, restart Docker Desktop first. If it persists, use the local API publish fallback:
+
+```powershell
+& 'C:\Program Files\dotnet\dotnet.exe' publish src/api/AgenticSdlc.Api/AgenticSdlc.Api.csproj -c Release -o src/api/AgenticSdlc.Api/publish
+docker compose --env-file .env -f infra/docker-compose.yml -f infra/docker-compose.local-api-build.yml up --build -d
+```
+
+That fallback builds the API with the local .NET SDK and Docker only packages the published files into the ASP.NET runtime image.
+
+If containers remain stuck in `Created` after that Docker runtime error, Docker Desktop itself needs to be restarted. After restart, clean up stale containers and rerun:
+
+```powershell
+docker compose --env-file .env -f infra/docker-compose.yml down --remove-orphans
+docker rm focused_chatterjee happy_haibt
+docker compose --env-file .env -f infra/docker-compose.yml up --build -d
+```
+
+If the normal API SDK build still fails after Docker Desktop restart, use the fallback command:
+
+```powershell
+& 'C:\Program Files\dotnet\dotnet.exe' publish src/api/AgenticSdlc.Api/AgenticSdlc.Api.csproj -c Release -o src/api/AgenticSdlc.Api/publish
+docker compose --env-file .env -f infra/docker-compose.yml -f infra/docker-compose.local-api-build.yml up --build -d
+```
+
 Check containers:
 
 ```powershell
@@ -75,6 +99,18 @@ Docker ports:
 - Agent service: `http://localhost:8000`
 - Chroma: `http://localhost:8001`
 - MySQL: `localhost:3306`
+
+If a host port is already allocated, change the matching value in `.env`:
+
+```env
+API_HOST_PORT=8080
+AGENT_HOST_PORT=8000
+CHROMA_HOST_PORT=8002
+MYSQL_HOST_PORT=3307
+CHROMA_URL=http://localhost:8002
+```
+
+Container-to-container traffic still uses internal service names, so changing `CHROMA_HOST_PORT` only affects access from your host machine.
 
 ## Local Run
 

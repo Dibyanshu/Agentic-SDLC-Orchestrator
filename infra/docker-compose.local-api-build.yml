@@ -1,0 +1,6 @@
+services:
+  api:
+    build:
+      context: ../src/api/AgenticSdlc.Api
+      dockerfile: Dockerfile.runtime
+

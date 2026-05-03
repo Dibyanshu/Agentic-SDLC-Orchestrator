@@ -17,7 +17,7 @@ LangGraph will act as the orchestration engine where nodes define execution step
 
 ## 1.1 Implementation Progress
 
-Last updated: 2026-05-01
+Last updated: 2026-05-03
 
 ### Completed
 
@@ -26,8 +26,8 @@ Last updated: 2026-05-01
 - Docker runtime verified with API, agent service, MySQL, and Chroma containers.
 - API health endpoint implemented: `GET /health`.
 - Agent service health endpoint implemented: `GET /health`.
-- Project creation implemented in API using an in-memory store: `POST /projects`.
-- Project lookup implemented in API: `GET /projects/{projectId}`.
+- Project creation implemented in API using MySQL persistence: `POST /projects`.
+- Project lookup implemented in API using MySQL persistence: `GET /projects/{projectId}`.
 - Workflow start implemented through API and agent service: `POST /workflow/start`.
 - HITL action endpoint implemented through API and agent service: `POST /hitl/action`.
 - Deterministic stub workflow implemented:
@@ -47,14 +47,16 @@ Last updated: 2026-05-01
 - Section retrieval endpoint implemented:
   - API: `GET /sections/{projectId}`
   - Agent service: `GET /sections/{project_id}`
+- Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
+- Agent service section writes now persist generated and edited sections to MySQL.
+- Section updates now create `section_versions` rows on create, regeneration, and edit paths.
+- HITL approve, edit, and regenerate actions now create `refinement_logs` rows.
 - Local .NET build verified using `C:\Program Files\dotnet\dotnet.exe`.
 - README updated with local and Docker run instructions.
 
 ### In Progress
 
-- Durable persistence integration. MySQL schema exists, but API project data and agent workflow state are still in memory.
-- Section versioning implementation. Schema exists, but write path is not yet wired to MySQL.
-- Checkpoint persistence. Schema exists, but workflow state is not yet saved to MySQL after each node.
+- Durable persistence integration for remaining API surfaces such as section version retrieval, LLM logs, checkpoints listing, and workflow resume.
 - Real LLM client integration. Agent outputs are currently deterministic stubs.
 - LLM logging write path. Schema exists, but calls are not yet logged because LLM execution is stubbed.
 

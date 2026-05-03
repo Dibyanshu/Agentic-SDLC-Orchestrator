@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<IProjectStore, InMemoryProjectStore>();
+builder.Services.AddSingleton<IProjectStore, MySqlProjectStore>();
 builder.Services.AddHttpClient<IAgentServiceClient, AgentServiceClient>((sp, client) =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
