@@ -35,8 +35,10 @@ class WorkflowResponse(BaseModel):
 
 
 class SectionResponse(BaseModel):
+    id: str | None = None
     artifact_type: str = Field(alias="artifactType")
     section_name: str = Field(alias="sectionName")
+    version: int | None = None
     content: Any
 
     model_config = {"populate_by_name": True}
@@ -45,6 +47,30 @@ class SectionResponse(BaseModel):
 class SectionsResponse(BaseModel):
     project_id: str = Field(alias="projectId")
     sections: list[SectionResponse]
+
+    model_config = {"populate_by_name": True}
+
+
+class UpdateSectionRequest(BaseModel):
+    content: Any
+
+
+class SectionVersionResponse(BaseModel):
+    id: int
+    section_id: str = Field(alias="sectionId")
+    version: int
+    content: Any
+    change_reason: str | None = Field(alias="changeReason")
+    created_at: str = Field(alias="createdAt")
+
+    model_config = {"populate_by_name": True}
+
+
+class SectionVersionsResponse(BaseModel):
+    project_id: str = Field(alias="projectId")
+    artifact_type: str = Field(alias="artifactType")
+    section_name: str = Field(alias="sectionName")
+    versions: list[SectionVersionResponse]
 
     model_config = {"populate_by_name": True}
 

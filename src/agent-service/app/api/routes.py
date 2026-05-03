@@ -2,17 +2,23 @@ from fastapi import APIRouter, HTTPException
 
 from app.graph.runner import (
     get_checkpoints,
+    get_section,
+    get_section_versions,
     get_sections,
     get_workflow_state,
     handle_hitl_action,
     start_workflow,
+    update_section,
 )
 from app.schemas.contracts import (
     CheckpointsResponse,
     HealthResponse,
     HitlActionRequest,
+    SectionResponse,
+    SectionVersionsResponse,
     SectionsResponse,
     StartWorkflowRequest,
+    UpdateSectionRequest,
     WorkflowResponse,
 )
 
@@ -46,6 +52,55 @@ def project_sections(project_id: str) -> SectionsResponse:
     response = get_sections(project_id)
     if response is None:
         raise HTTPException(status_code=404, detail="sections were not found")
+
+    return response
+
+
+@router.get(
+    "/sections/{project_id}/{artifact_type}/{section_name}",
+    response_model=SectionResponse,
+)
+def project_section(
+    project_id: str,
+    artifact_type: str,
+    section_name: str,
+) -> SectionResponse:
+    response = get_section(project_id, artifact_type, section_name)
+    if response is None:
+        raise HTTPException(status_code=404, detail="section was not found")
+
+    return response
+
+
+@router.put(
+    "/sections/{project_id}/{artifact_type}/{section_name}",
+    response_model=SectionResponse,
+)
+def project_section_update(
+    project_id: str,
+    artifact_type: str,
+    section_name: str,
+    request: UpdateSectionRequest,
+) -> SectionResponse:
+    response = update_section(project_id, artifact_type, section_name, request.content)
+    if response is None:
+        raise HTTPException(status_code=404, detail="section was not found")
+
+    return response
+
+
+@router.get(
+    "/sections/{project_id}/{artifact_type}/{section_name}/versions",
+    response_model=SectionVersionsResponse,
+)
+def project_section_versions(
+    project_id: str,
+    artifact_type: str,
+    section_name: str,
+) -> SectionVersionsResponse:
+    response = get_section_versions(project_id, artifact_type, section_name)
+    if response is None:
+        raise HTTPException(status_code=404, detail="section was not found")
 
     return response
 

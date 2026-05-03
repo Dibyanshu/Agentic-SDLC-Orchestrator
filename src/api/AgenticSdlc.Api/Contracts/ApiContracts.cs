@@ -24,13 +24,31 @@ public sealed record WorkflowResponse(
     IReadOnlyDictionary<string, object?> Artifacts);
 
 public sealed record SectionResponse(
+    string? Id,
     string ArtifactType,
     string SectionName,
+    int? Version,
     object? Content);
 
 public sealed record SectionsResponse(
     string ProjectId,
     IReadOnlyList<SectionResponse> Sections);
+
+public sealed record UpdateSectionRequest(object? Content);
+
+public sealed record SectionVersionResponse(
+    long Id,
+    string SectionId,
+    int Version,
+    object? Content,
+    string? ChangeReason,
+    DateTimeOffset CreatedAt);
+
+public sealed record SectionVersionsResponse(
+    string ProjectId,
+    string ArtifactType,
+    string SectionName,
+    IReadOnlyList<SectionVersionResponse> Versions);
 
 public sealed record CheckpointResponse(
     long Id,

@@ -10,6 +10,8 @@ from app.schemas.contracts import (
     CheckpointsResponse,
     HitlActionRequest,
     SectionResponse,
+    SectionVersionResponse,
+    SectionVersionsResponse,
     SectionsResponse,
     StartWorkflowRequest,
     WorkflowResponse,
@@ -119,8 +121,10 @@ def get_sections(project_id: str) -> SectionsResponse | None:
     if persisted_sections:
         sections = [
             SectionResponse(
+                id=row["id"],
                 artifact_type=row["artifact_type"],
                 section_name=row["section_name"],
+                version=row["version"],
                 content=row["content"],
             )
             for row in persisted_sections
@@ -142,6 +146,90 @@ def get_sections(project_id: str) -> SectionsResponse | None:
             )
 
     return SectionsResponse(project_id=project_id, sections=sections)
+
+
+def get_section(
+    project_id: str,
+    artifact_type: str,
+    section_name: str,
+) -> SectionResponse | None:
+    row = _SECTION_STORE.get_section(project_id, artifact_type, section_name)
+    if row is None:
+        return None
+
+    return SectionResponse(
+        id=row["id"],
+        artifact_type=row["artifact_type"],
+        section_name=row["section_name"],
+        version=row["version"],
+        content=row["content"],
+    )
+
+
+def update_section(
+    project_id: str,
+    artifact_type: str,
+    section_name: str,
+    content: object,
+) -> SectionResponse | None:
+    row = _SECTION_STORE.update_section(
+        project_id,
+        artifact_type,
+        section_name,
+        content,
+        "section_update",
+    )
+    if row is None:
+        return None
+
+    state = _STATE_STORE.get(project_id) or _CHECKPOINT_STORE.get(project_id)
+    if state is not None:
+        artifacts = state.setdefault("artifacts", {})
+        artifact = artifacts.setdefault(artifact_type, {})
+        artifact[section_name] = content
+        state["updated_section"] = f"{artifact_type}.{section_name}"
+        state.setdefault("execution_history", []).append(
+            f"section_update:{artifact_type}.{section_name}"
+        )
+        _save_checkpoint(state)
+        _STATE_STORE[project_id] = state
+
+    return SectionResponse(
+        id=row["id"],
+        artifact_type=row["artifact_type"],
+        section_name=row["section_name"],
+        version=row["version"],
+        content=row["content"],
+    )
+
+
+def get_section_versions(
+    project_id: str,
+    artifact_type: str,
+    section_name: str,
+) -> SectionVersionsResponse | None:
+    rows = _SECTION_STORE.get_section_versions(project_id, artifact_type, section_name)
+    if rows is None:
+        return None
+
+    versions = [
+        SectionVersionResponse(
+            id=row["id"],
+            section_id=row["section_id"],
+            version=row["version"],
+            content=row["content"],
+            change_reason=row["change_reason"],
+            created_at=row["created_at"],
+        )
+        for row in rows
+    ]
+
+    return SectionVersionsResponse(
+        project_id=project_id,
+        artifact_type=artifact_type,
+        section_name=section_name,
+        versions=versions,
+    )
 
 
 def get_checkpoints(project_id: str) -> CheckpointsResponse | None:

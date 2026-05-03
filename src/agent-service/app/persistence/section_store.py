@@ -115,7 +115,7 @@ class SectionStore:
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT a.type AS artifact_type, s.section_name, s.content
+                    SELECT s.id, a.type AS artifact_type, s.section_name, s.version, s.content
                     FROM sections s
                     INNER JOIN artifacts a ON a.id = s.artifact_id
                     WHERE a.project_id = %s
@@ -127,9 +127,103 @@ class SectionStore:
 
         return [
             {
+                "id": row["id"],
                 "artifact_type": row["artifact_type"],
                 "section_name": row["section_name"],
+                "version": row["version"],
                 "content": _decode_json(row["content"]),
+            }
+            for row in rows
+        ]
+
+    def get_section(
+        self,
+        project_id: str,
+        artifact_type: str,
+        section_name: str,
+    ) -> dict[str, Any] | None:
+        with self._mysql.connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT s.id, a.type AS artifact_type, s.section_name, s.version, s.content
+                    FROM sections s
+                    INNER JOIN artifacts a ON a.id = s.artifact_id
+                    WHERE a.project_id = %s AND a.type = %s AND s.section_name = %s
+                    LIMIT 1
+                    """,
+                    (project_id, artifact_type, section_name),
+                )
+                row = cursor.fetchone()
+
+        if not row:
+            return None
+
+        return {
+            "id": row["id"],
+            "artifact_type": row["artifact_type"],
+            "section_name": row["section_name"],
+            "version": row["version"],
+            "content": _decode_json(row["content"]),
+        }
+
+    def update_section(
+        self,
+        project_id: str,
+        artifact_type: str,
+        section_name: str,
+        content: Any,
+        change_reason: str,
+    ) -> dict[str, Any] | None:
+        section = self.get_section(project_id, artifact_type, section_name)
+        if section is None:
+            return None
+
+        self.save_artifact_sections(
+            project_id,
+            artifact_type,
+            {section_name: content},
+            change_reason,
+        )
+        self.save_refinement_log(
+            project_id,
+            f"{artifact_type}.{section_name}",
+            change_reason,
+            json.dumps(content),
+        )
+        return self.get_section(project_id, artifact_type, section_name)
+
+    def get_section_versions(
+        self,
+        project_id: str,
+        artifact_type: str,
+        section_name: str,
+    ) -> list[dict[str, Any]] | None:
+        section_id = self._find_section_id_by_project(project_id, artifact_type, section_name)
+        if section_id is None:
+            return None
+
+        with self._mysql.connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT id, section_id, version, content, change_reason, created_at
+                    FROM section_versions
+                    WHERE section_id = %s
+                    ORDER BY version DESC
+                    """,
+                    (section_id,),
+                )
+                rows = cursor.fetchall()
+
+        return [
+            {
+                "id": row["id"],
+                "section_id": row["section_id"],
+                "version": row["version"],
+                "content": _decode_json(row["content"]),
+                "change_reason": row["change_reason"],
+                "created_at": row["created_at"].isoformat(),
             }
             for row in rows
         ]

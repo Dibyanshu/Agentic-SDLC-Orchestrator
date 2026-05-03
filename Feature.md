@@ -50,6 +50,11 @@ Last updated: 2026-05-03
 - Section retrieval endpoint implemented:
   - API: `GET /sections/{projectId}`
   - Agent service: `GET /sections/{project_id}`
+- Section detail, update, and version history endpoints implemented:
+  - API: `GET /sections/{projectId}/{artifactType}/{sectionName}`
+  - API: `PUT /sections/{projectId}/{artifactType}/{sectionName}`
+  - API: `GET /sections/{projectId}/{artifactType}/{sectionName}/versions`
+  - Agent service exposes matching persisted section endpoints.
 - Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
 - Agent service section writes now persist generated and edited sections to MySQL.
 - Section updates now create `section_versions` rows on create, regeneration, and edit paths.

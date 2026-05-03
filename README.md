@@ -216,6 +216,21 @@ Get generated sections:
 GET http://localhost:8080/sections/<project id>
 ```
 
+Get, update, and inspect one section:
+
+```http
+GET http://localhost:8080/sections/<project id>/PRD/Features
+
+PUT http://localhost:8080/sections/<project id>/PRD/Features
+Content-Type: application/json
+
+{
+  "content": "Updated feature description"
+}
+
+GET http://localhost:8080/sections/<project id>/PRD/Features/versions
+```
+
 Approve HITL:
 
 ```http

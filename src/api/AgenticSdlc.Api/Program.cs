@@ -91,6 +91,63 @@ app.MapGet("/sections/{projectId}", async (string projectId, IProjectStore store
 })
 .WithName("GetSections");
 
+app.MapGet("/sections/{projectId}/{artifactType}/{sectionName}", async (string projectId, string artifactType, string sectionName, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(artifactType) || string.IsNullOrWhiteSpace(sectionName))
+    {
+        return Results.BadRequest(new ErrorResponse("section_validation_failed", "Artifact type and section name are required."));
+    }
+
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.GetSectionAsync(projectId, artifactType, sectionName, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("section_not_found", "Section was not found."))
+        : Results.Ok(response);
+})
+.WithName("GetSection");
+
+app.MapPut("/sections/{projectId}/{artifactType}/{sectionName}", async (string projectId, string artifactType, string sectionName, UpdateSectionRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(artifactType) || string.IsNullOrWhiteSpace(sectionName) || request.Content is null)
+    {
+        return Results.BadRequest(new ErrorResponse("section_validation_failed", "Artifact type, section name, and content are required."));
+    }
+
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.UpdateSectionAsync(projectId, artifactType, sectionName, request, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("section_not_found", "Section was not found."))
+        : Results.Ok(response);
+})
+.WithName("UpdateSection");
+
+app.MapGet("/sections/{projectId}/{artifactType}/{sectionName}/versions", async (string projectId, string artifactType, string sectionName, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(artifactType) || string.IsNullOrWhiteSpace(sectionName))
+    {
+        return Results.BadRequest(new ErrorResponse("section_validation_failed", "Artifact type and section name are required."));
+    }
+
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.GetSectionVersionsAsync(projectId, artifactType, sectionName, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("section_not_found", "Section was not found."))
+        : Results.Ok(response);
+})
+.WithName("GetSectionVersions");
+
 app.MapGet("/checkpoints/{projectId}", async (string projectId, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
 {
     if (store.Get(projectId) is null)
