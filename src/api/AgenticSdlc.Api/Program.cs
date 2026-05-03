@@ -299,9 +299,11 @@ app.MapPost("/rag/sources", async (RagSourceCreateRequest request, IProjectStore
         return Results.BadRequest(new ErrorResponse("rag_source_validation_failed", "Project id, file name, and content are required."));
     }
 
-    if (!string.Equals(request.SourceType, "txt", StringComparison.OrdinalIgnoreCase))
+    var sourceType = (request.SourceType ?? "").Trim().ToLowerInvariant();
+    var allowedSourceTypes = new[] { "txt", "pdf", "docx" };
+    if (!allowedSourceTypes.Contains(sourceType))
     {
-        return Results.BadRequest(new ErrorResponse("rag_source_type_invalid", "Only txt sources are supported."));
+        return Results.BadRequest(new ErrorResponse("rag_source_type_invalid", "sourceType must be txt, pdf, or docx."));
     }
 
     if (store.Get(request.ProjectId) is null)
@@ -311,7 +313,7 @@ app.MapPost("/rag/sources", async (RagSourceCreateRequest request, IProjectStore
 
     try
     {
-        var response = await agentClient.CreateRagSourceAsync(request with { SourceType = "txt" }, cancellationToken);
+        var response = await agentClient.CreateRagSourceAsync(request with { SourceType = sourceType }, cancellationToken);
         return Results.Created($"/rag/sources/{request.ProjectId}", response);
     }
     catch (AgentServiceException exc) when (exc.StatusCode == System.Net.HttpStatusCode.BadRequest)

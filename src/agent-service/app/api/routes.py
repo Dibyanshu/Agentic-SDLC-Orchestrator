@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.context.rag_ingestion import ingest_txt_source, list_rag_sources
+from app.context.rag_ingestion import ingest_source, list_rag_sources
 from app.llm.llm_client import LlmConfigurationError
 from app.llm.settings import AgentLlmSettings
 from app.llm.token_budget import TokenBudgetExceededError
@@ -198,11 +198,17 @@ def rag_source_create(request: RagSourceCreateRequest) -> RagSourceResponse:
     if not request.project_id.strip():
         raise HTTPException(status_code=400, detail="project_id is required")
 
-    if request.source_type != "txt":
-        raise HTTPException(status_code=400, detail="only txt sources are supported")
+    source_type = request.source_type.strip().lower()
+    if source_type not in {"txt", "pdf", "docx"}:
+        raise HTTPException(status_code=400, detail="sourceType must be txt, pdf, or docx")
 
     try:
-        source = ingest_txt_source(request.project_id, request.file_name.strip() or "source.txt", request.content)
+        source = ingest_source(
+            request.project_id,
+            request.file_name.strip() or f"source.{source_type}",
+            source_type,
+            request.content,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

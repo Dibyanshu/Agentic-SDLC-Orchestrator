@@ -86,12 +86,17 @@ export async function getMetrics(projectId: string): Promise<WorkflowMetrics> {
   return response.data;
 }
 
-export async function uploadRagSource(projectId: string, fileName: string, content: string): Promise<RagSource> {
+export async function uploadRagSource(
+  projectId: string,
+  fileName: string,
+  content: string,
+  sourceType: RagSource["sourceType"],
+): Promise<RagSource> {
   const response = await client.post<RagSource>("/rag/sources", {
     projectId,
     fileName,
     content,
-    sourceType: "txt",
+    sourceType,
   });
   return response.data;
 }

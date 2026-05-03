@@ -68,7 +68,7 @@ export type RagSource = {
   id: string;
   projectId: string;
   fileName: string;
-  sourceType: string;
+  sourceType: "txt" | "pdf" | "docx";
   contentHash: string;
   chunkCount: number;
   createdAt: string;

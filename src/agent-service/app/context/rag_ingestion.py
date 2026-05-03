@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.context.chroma_client import get_collection
+from app.context.document_parser import parse_source_content
 from app.context.embeddings import embed_text
 from app.context.text_chunker import chunk_text
 from app.persistence.mysql_client import MysqlClient
@@ -118,20 +119,29 @@ class RagSourceStore:
                 connection.commit()
 
 
-def ingest_txt_source(project_id: str, file_name: str, content: str) -> dict[str, Any]:
-    normalized = content.strip()
+def ingest_source(project_id: str, file_name: str, source_type: str, content: str) -> dict[str, Any]:
+    normalized_type = source_type.strip().lower()
+    if normalized_type not in {"txt", "pdf", "docx"}:
+        raise ValueError("sourceType must be txt, pdf, or docx")
+
+    try:
+        parsed_content = parse_source_content(normalized_type, content)
+    except Exception as exc:
+        raise ValueError(f"{normalized_type} source could not be parsed") from exc
+
+    normalized = parsed_content.strip()
     if not normalized:
-        raise ValueError("source content is required")
+        raise ValueError("source content could not be parsed into text")
 
     if len(normalized) > MAX_SOURCE_CHARS:
-        raise ValueError(f"source content must be {MAX_SOURCE_CHARS} characters or fewer")
+        raise ValueError(f"parsed source content must be {MAX_SOURCE_CHARS} characters or fewer")
 
     chunks = chunk_text(normalized)
     source_hash = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
     source = RagSourceStore().save_source(
         project_id=project_id,
         file_name=file_name,
-        source_type="txt",
+        source_type=normalized_type,
         content_hash=source_hash,
         chunk_count=len(chunks),
     )
@@ -146,7 +156,7 @@ def ingest_txt_source(project_id: str, file_name: str, content: str) -> dict[str
             {
                 "project_id": project_id,
                 "source_id": source["id"],
-                "source_type": "txt",
+                "source_type": normalized_type,
                 "file_name": file_name,
                 "chunk_index": index,
             }
@@ -155,6 +165,10 @@ def ingest_txt_source(project_id: str, file_name: str, content: str) -> dict[str
     )
 
     return source
+
+
+def ingest_txt_source(project_id: str, file_name: str, content: str) -> dict[str, Any]:
+    return ingest_source(project_id, file_name, "txt", content)
 
 
 def list_rag_sources(project_id: str) -> list[dict[str, Any]]:

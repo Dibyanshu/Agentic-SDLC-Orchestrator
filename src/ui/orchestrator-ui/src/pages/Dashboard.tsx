@@ -145,8 +145,12 @@ export function Dashboard() {
   async function handleSourceUpload(file: File) {
     if (!project) return;
     await runAction(async () => {
-      const content = await file.text();
-      await uploadRagSource(project.id, file.name, content);
+      const sourceType = getSourceType(file);
+      if (!sourceType) {
+        throw new Error("Only TXT, PDF, and DOCX context sources are supported.");
+      }
+      const content = sourceType === "txt" ? await file.text() : await readFileAsBase64(file);
+      await uploadRagSource(project.id, file.name, content, sourceType);
       setSources(await getRagSources(project.id));
     }, "Context source indexed");
   }
@@ -327,4 +331,30 @@ export function Dashboard() {
       }
     />
   );
+}
+
+function getSourceType(file: File): RagSource["sourceType"] | undefined {
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  if (extension === "txt" || file.type === "text/plain") return "txt";
+  if (extension === "pdf" || file.type === "application/pdf") return "pdf";
+  if (
+    extension === "docx" ||
+    file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ) {
+    return "docx";
+  }
+
+  return undefined;
+}
+
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read context source."));
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      resolve(result.split(",", 2)[1] ?? "");
+    };
+    reader.readAsDataURL(file);
+  });
 }

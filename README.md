@@ -20,7 +20,7 @@ The first implementation slice has been scaffolded:
 - MySQL migration scripts in `infra/mysql/migrations`
 - Docker Compose runtime in `infra/docker-compose.yml`
 
-The current Python workflow can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. Project records, generated sections, section versions, checkpoints, HITL refinement logs, TXT RAG source metadata, per-agent LLM settings, LLM response cache entries, and LLM context chunk traces are now written to MySQL. TXT context sources are indexed into Chroma and retrieved by the context builder before PM, BA, and Architect generation. PM, BA, and Architect can each use `stub`, OpenAI, Gemini, or Claude with project-specific model and input token budget settings.
+The current Python workflow can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. Project records, generated sections, section versions, checkpoints, HITL refinement logs, RAG source metadata, per-agent LLM settings, LLM response cache entries, and LLM context chunk traces are now written to MySQL. TXT, PDF, and DOCX context sources are indexed into Chroma and retrieved by the context builder before PM, BA, and Architect generation. PM, BA, and Architect can each use `stub`, OpenAI, Gemini, or Claude with project-specific model and input token budget settings.
 
 ## Prerequisites
 
@@ -362,7 +362,7 @@ This validation uses `gemini-2.5-flash` by default because some experimental mod
 powershell -ExecutionPolicy Bypass -File scripts/validate-gemini.ps1 -GeminiModel gemini-2.5-flash
 ```
 
-Upload and list TXT RAG context:
+Upload and list RAG context:
 
 ```http
 POST http://localhost:8080/rag/sources
@@ -377,6 +377,8 @@ Content-Type: application/json
 
 GET http://localhost:8080/rag/sources/<project id>
 ```
+
+Supported `sourceType` values are `txt`, `pdf`, and `docx`. For `txt`, send plain text in `content`. For `pdf` and `docx`, send base64-encoded file bytes in `content`; the React UI handles this automatically when uploading `.txt`, `.pdf`, or `.docx` files.
 
 ## Verified Commands
 

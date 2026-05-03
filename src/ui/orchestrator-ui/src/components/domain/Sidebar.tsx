@@ -76,7 +76,7 @@ export function Sidebar({
         </label>
         <input
           type="file"
-          accept=".txt,text/plain"
+          accept=".txt,text/plain,.pdf,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           disabled={busy || !project}
           onChange={(event) => {
             const file = event.target.files?.[0];
@@ -94,7 +94,9 @@ export function Sidebar({
             sources.map((source) => (
               <div key={source.id} className="rounded-md border border-slate-200 px-2 py-1.5">
                 <div className="truncate text-xs font-semibold text-slate-700">{source.fileName}</div>
-                <div className="text-xs text-slate-500">{source.chunkCount} chunks</div>
+                <div className="text-xs text-slate-500">
+                  {source.sourceType.toUpperCase()} - {source.chunkCount} chunks
+                </div>
               </div>
             ))
           )}

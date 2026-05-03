@@ -77,17 +77,18 @@ Last updated: 2026-05-03
   - Project creation and workflow start/resume
   - Agents panel, section tabs/editor/history, HITL action panel, logs, and metrics
   - Docker Compose `ui` service
-- Controlled TXT RAG vertical slice implemented:
+- Controlled TXT/PDF/DOCX RAG vertical slice implemented:
   - API: `POST /rag/sources`
   - API: `GET /rag/sources/{projectId}`
   - Agent service stores source metadata in MySQL.
-  - Agent service chunks TXT content and stores embeddings in Chroma.
+  - Agent service parses TXT content directly and extracts text from PDF/DOCX base64 file payloads.
+  - Agent service chunks parsed content and stores embeddings in Chroma.
   - Context builder retrieves up to 3 Chroma chunks for PM, BA, and Architect generation.
   - Retrieved chunks are traced in `llm_context_chunks`.
-  - UI supports TXT context upload and source listing.
+  - UI supports TXT, PDF, and DOCX context upload and source listing.
 - Initial automated verification implemented:
   - `.NET` API contract test project in `src/api/AgenticSdlc.Api.Tests`.
-  - Python unittest coverage for RAG chunking, deterministic embeddings, context limits, and regeneration planning.
+  - Python unittest coverage for RAG parsing, chunking, deterministic embeddings, context limits, and regeneration planning.
   - Docker smoke script in `scripts/smoke-test.ps1` for project creation, TXT RAG upload, workflow execution, HITL approvals, logs, metrics, and checkpoints.
   - Intentional OpenAI validation script in `scripts/validate-openai.ps1` for PM-only real-provider validation and cache verification.
   - Intentional Gemini validation script in `scripts/validate-gemini.ps1` for PM-only real-provider validation and cache verification.

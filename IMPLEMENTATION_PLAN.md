@@ -35,7 +35,7 @@ Completed implementation:
 - `.env` is used for local runtime secrets and is ignored by git.
 - React UI console for project creation, workflow start/resume, section editing/history, HITL actions, agent progress, logs, and metrics.
 - Docker Compose UI service on `http://localhost:5173`.
-- Controlled TXT RAG vertical slice with source metadata in MySQL, chunk storage/retrieval in Chroma, context injection, and `llm_context_chunks` traces.
+- Controlled TXT/PDF/DOCX RAG vertical slice with source metadata in MySQL, chunk storage/retrieval in Chroma, context injection, and `llm_context_chunks` traces.
 - Initial automated tests and Docker smoke script for the current happy path.
 - Cost controls with per-node input token budgets and MySQL-backed LLM response caching.
 - Per-project PM/BA/Architect LLM settings for provider, model, and input token budget.
@@ -44,8 +44,7 @@ Completed implementation:
 Still pending:
 
 - Real LLM client execution validated intentionally for Claude.
-- RAG support for PDF, DOCX, screenshots/OCR, delete source, and advanced ranking.
-- Expanded RAG source handling.
+- RAG support for screenshots/OCR, delete source, and advanced ranking.
 
 ## 1. Target Phase 1 Architecture
 
@@ -422,7 +421,7 @@ Acceptance criteria:
 
 ## 10. Milestone 9 - Controlled RAG
 
-Status: Partially complete with TXT ingestion.
+Status: Partially complete with TXT, PDF, and DOCX ingestion.
 
 Goal: support document and screenshot context without giving agents direct retrieval control.
 
@@ -436,15 +435,15 @@ DELETE /rag/sources/{sourceId}
 
 Tasks:
 
-1. Done: Add JSON TXT upload handling in `.NET API`.
-2. Done: Add TXT ingestion endpoint in Python Agent Service.
+1. Done: Add JSON TXT/PDF/DOCX upload handling in `.NET API`.
+2. Done: Add TXT/PDF/DOCX ingestion endpoint in Python Agent Service.
 3. Implement parsers:
    - Done: TXT first
-   - Pending: PDF second
-   - Pending: DOCX third
+   - Done: PDF second
+   - Done: DOCX third
    - Pending: OCR screenshot last
 4. Done: Chunk parsed text.
-5. Done: Generate deterministic local embeddings for TXT chunks.
+5. Done: Generate deterministic local embeddings for parsed source chunks.
 6. Done: Store chunks in Chroma with project and source tags.
 7. Done: Retrieve top 5, filter to top 3 in Context Builder.
 8. Pending: deduplicate chunks before prompt construction.
@@ -452,7 +451,8 @@ Tasks:
 
 Acceptance criteria:
 
-- Done: Uploaded TXT document can influence PRD generation.
+- Done: Uploaded TXT, PDF, and DOCX documents can be parsed, chunked, and indexed for workflow context.
+- Done: Uploaded TXT document can influence PRD generation through the Docker smoke path.
 - Done: Context Builder returns at most 3 chunks.
 - Done: LLM logs record which chunks were injected through `llm_context_chunks`.
 - Agents do not call retrieval directly.
@@ -525,6 +525,7 @@ Acceptance criteria:
 - Done: one command runs `.NET` API tests with `dotnet test AgenticSdlc.sln`.
 - Done: one command runs Python unit tests with `python -m unittest discover -s src/agent-service/tests`.
 - Done: Docker smoke script exercises project creation, TXT RAG upload, workflow generation, HITL approvals, logs, metrics, and checkpoints.
+- Done: Python tests cover TXT, PDF, and DOCX parsing.
 - Done: OpenAI validation script exercises PM-only real-provider generation and cache hit behavior.
 - Done: Gemini validation script exercises PM-only real-provider generation and cache hit behavior.
 - Failed LLM calls are visible in logs.
@@ -548,7 +549,7 @@ Acceptance criteria:
 
 ### P1 - Should Have
 
-- Partial: TXT ingestion implemented; PDF/DOCX pending
+- Partial: TXT/PDF/DOCX ingestion implemented; OCR screenshot ingestion pending
 - Done: Chroma retrieval
 - Done: Token budget enforcement
 - Done: Response caching
