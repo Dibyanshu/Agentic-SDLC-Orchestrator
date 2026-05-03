@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
+from app.llm.cache_key import build_cache_key
 from app.llm.llm_client import LlmClient
 from app.llm.llm_client import LlmConfigurationError
 from app.llm.prompt_templates import PROMPT_TEMPLATE_VERSION
@@ -228,4 +229,3 @@ def _context_with_settings(context: dict[str, Any], settings: Any) -> dict[str, 
             "token_budget": settings.token_budget,
         },
     }
-from app.llm.cache_key import build_cache_key

@@ -342,6 +342,14 @@ powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
 
 The smoke test also verifies a repeated prompt/context returns a cached LLM response and increments workflow cache-hit metrics.
 
+Run the intentional OpenAI validation only when you want to spend a small number of tokens through your configured `OPENAI_API_KEY`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/validate-openai.ps1
+```
+
+This validation creates one project, uploads a small TXT context source, runs PM generation with OpenAI, checks PRD JSON/logs/token usage/cache key, then repeats the same request to verify the second run is cache-only. It does not approve BA or Architecture.
+
 Upload and list TXT RAG context:
 
 ```http
@@ -375,4 +383,5 @@ python -m unittest discover -s src/agent-service/tests
 cd src/ui/orchestrator-ui
 npm run build
 powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
+powershell -ExecutionPolicy Bypass -File scripts/validate-openai.ps1
 ```

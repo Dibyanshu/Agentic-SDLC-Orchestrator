@@ -39,10 +39,11 @@ Completed implementation:
 - Initial automated tests and Docker smoke script for the current happy path.
 - Cost controls with per-node input token budgets and MySQL-backed LLM response caching.
 - Per-project PM/BA/Architect LLM settings for provider, model, and input token budget.
+- Intentional OpenAI PM validation script with cache-aware real-provider smoke coverage.
 
 Still pending:
 
-- Real LLM client execution validated intentionally for OpenAI, Gemini, and Claude.
+- Real LLM client execution validated intentionally for Gemini and Claude.
 - RAG support for PDF, DOCX, screenshots/OCR, delete source, and advanced ranking.
 - Expanded RAG source handling.
 
@@ -319,7 +320,7 @@ Acceptance criteria:
 - Partial: PM prompt template execution is multi-provider ready and defaults to deterministic stub mode.
 - Done: invalid PM JSON/failure attempts are logged and retried up to 2 times after the first attempt.
 - Done: PM LLM log includes prompt, response, token estimates, status, latency, and cache metadata.
-- Pending: validate OpenAI, Gemini, and Claude modes with real provider calls.
+- Partial: OpenAI PM mode validated with real provider calls; Gemini and Claude still pending real-provider validation.
 
 ## 7. Milestone 6 - HITL Approve/Edit/Regenerate
 
@@ -524,6 +525,7 @@ Acceptance criteria:
 - Done: one command runs `.NET` API tests with `dotnet test AgenticSdlc.sln`.
 - Done: one command runs Python unit tests with `python -m unittest discover -s src/agent-service/tests`.
 - Done: Docker smoke script exercises project creation, TXT RAG upload, workflow generation, HITL approvals, logs, metrics, and checkpoints.
+- Done: OpenAI validation script exercises PM-only real-provider generation and cache hit behavior.
 - Failed LLM calls are visible in logs.
 - Checkpoint resume works after service restart.
 
@@ -537,7 +539,7 @@ Acceptance criteria:
 - Done: Section API with versioning
 - Done: Workflow start/resume.
 - Partial: LangGraph skeleton. Deterministic runner exists; compiled LangGraph graph is pending if required.
-- Partial: PM, BA, Architect nodes. Deterministic stubs exist; real LLM execution is pending.
+- Partial: PM, BA, Architect nodes. Deterministic stubs exist; OpenAI PM validation passes; full real-provider workflow validation is pending.
 - Done: HITL approve/edit/regenerate with loop limit enforcement.
 - Done: LLM logging for PM, BA, Architect, and node-based regeneration.
 - Done: Checkpointing
@@ -552,6 +554,7 @@ Acceptance criteria:
 - Done: Metrics endpoint
 - Done: UI frontend
 - Done: End-to-end Docker smoke script
+- Done: OpenAI PM validation script
 
 ### P2 - Later
 
@@ -591,7 +594,7 @@ Day-by-day plan:
 3. Done: implement PM prompt template, JSON parsing, schema validation, and retry up to 2 times.
 4. Done: wire PM node to LLM client and store LLM logs for success and failure.
 5. Done: validate `POST /projects -> POST /workflow/start -> GET /sections -> GET /logs/llm` in Docker using stub mode.
-6. Pending: validate OpenAI, Gemini, and Claude modes intentionally with real provider keys.
+6. Partial: validate OpenAI, Gemini, and Claude modes intentionally with real provider keys. OpenAI PM validation is done; Gemini and Claude are pending.
 7. Done: extend the same LLM logging pattern to BA, Architect, and regeneration.
 8. Pending: validate regeneration intentionally with real provider keys.
 
@@ -631,6 +634,7 @@ For this local working session, a milestone should also be validated with:
 - `python -m unittest discover -s src/agent-service/tests`
 - `docker compose --env-file .env -f infra/docker-compose.yml up -d --build api agent-service`
 - `powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1`
+- `powershell -ExecutionPolicy Bypass -File scripts/validate-openai.ps1`
 
 ## 16. Key Engineering Decisions
 
