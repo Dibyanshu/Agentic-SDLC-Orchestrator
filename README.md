@@ -45,6 +45,8 @@ Copy environment defaults:
 cp .env.example .env
 ```
 
+Keep real local secrets such as `OPENAI_API_KEY` in `.env`. The `.env` file is intentionally ignored by git; `.env.example` should stay as the safe template with empty/example values.
+
 Build and start the stack:
 
 ```powershell
@@ -119,7 +121,7 @@ Use local run when you want to iterate on code directly from the workspace. You 
 Start only the backing services:
 
 ```powershell
-docker compose --env-file .env.example -f infra/docker-compose.yml up -d mysql chroma
+docker compose --env-file .env -f infra/docker-compose.yml up -d mysql chroma
 ```
 
 Run the Python agent service in terminal 1:
@@ -202,6 +204,12 @@ Get workflow status:
 GET http://localhost:8080/workflow/<project id>/status
 ```
 
+Get persisted checkpoints:
+
+```http
+GET http://localhost:8080/checkpoints/<project id>
+```
+
 Get generated sections:
 
 ```http
@@ -227,8 +235,8 @@ Approve three times to walk the current stub workflow from PRD to BA to Architec
 The following commands were verified successfully:
 
 ```powershell
-docker compose --env-file .env.example -f infra/docker-compose.yml build
-docker compose --env-file .env.example -f infra/docker-compose.yml up -d
+docker compose --env-file .env -f infra/docker-compose.yml build
+docker compose --env-file .env -f infra/docker-compose.yml up -d
 Invoke-RestMethod -Uri http://localhost:8000/health
 Invoke-RestMethod -Uri http://localhost:8080/health
 & 'C:\Program Files\dotnet\dotnet.exe' build src/api/AgenticSdlc.Api/AgenticSdlc.Api.csproj

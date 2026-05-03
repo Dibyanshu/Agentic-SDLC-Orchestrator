@@ -47,3 +47,21 @@ class SectionsResponse(BaseModel):
     sections: list[SectionResponse]
 
     model_config = {"populate_by_name": True}
+
+
+class CheckpointResponse(BaseModel):
+    id: int
+    project_id: str = Field(alias="projectId")
+    current_node: str = Field(alias="currentNode")
+    status: str
+    graph_state: dict[str, Any] = Field(alias="graphState")
+    created_at: str = Field(alias="createdAt")
+
+    model_config = {"populate_by_name": True}
+
+
+class CheckpointsResponse(BaseModel):
+    project_id: str = Field(alias="projectId")
+    checkpoints: list[CheckpointResponse]
+
+    model_config = {"populate_by_name": True}

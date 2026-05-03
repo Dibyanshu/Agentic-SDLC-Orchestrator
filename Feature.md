@@ -44,6 +44,9 @@ Last updated: 2026-05-03
 - Workflow state endpoint implemented:
   - API: `GET /workflow/{projectId}/status`
   - Agent service: `GET /workflow/{project_id}/state`
+- Checkpoint retrieval endpoint implemented:
+  - API: `GET /checkpoints/{projectId}`
+  - Agent service: `GET /checkpoints/{project_id}`
 - Section retrieval endpoint implemented:
   - API: `GET /sections/{projectId}`
   - Agent service: `GET /sections/{project_id}`

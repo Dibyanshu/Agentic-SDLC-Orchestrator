@@ -62,3 +62,36 @@ class MySqlCheckpointStore:
             return json.loads(graph_state)
 
         return graph_state
+
+    def list(self, project_id: str) -> list[dict]:
+        with self._mysql.connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT id, project_id, graph_state, current_node, status, created_at
+                    FROM checkpoints
+                    WHERE project_id = %s
+                    ORDER BY id DESC
+                    """,
+                    (project_id,),
+                )
+                rows = cursor.fetchall()
+
+        return [
+            {
+                "id": row["id"],
+                "project_id": row["project_id"],
+                "graph_state": _decode_graph_state(row["graph_state"]),
+                "current_node": row["current_node"],
+                "status": row["status"],
+                "created_at": row["created_at"].isoformat(),
+            }
+            for row in rows
+        ]
+
+
+def _decode_graph_state(value: object) -> AgentState:
+    if isinstance(value, str):
+        return json.loads(value)
+
+    return value

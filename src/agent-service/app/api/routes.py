@@ -1,12 +1,14 @@
 from fastapi import APIRouter, HTTPException
 
 from app.graph.runner import (
+    get_checkpoints,
     get_sections,
     get_workflow_state,
     handle_hitl_action,
     start_workflow,
 )
 from app.schemas.contracts import (
+    CheckpointsResponse,
     HealthResponse,
     HitlActionRequest,
     SectionsResponse,
@@ -44,6 +46,15 @@ def project_sections(project_id: str) -> SectionsResponse:
     response = get_sections(project_id)
     if response is None:
         raise HTTPException(status_code=404, detail="sections were not found")
+
+    return response
+
+
+@router.get("/checkpoints/{project_id}", response_model=CheckpointsResponse)
+def project_checkpoints(project_id: str) -> CheckpointsResponse:
+    response = get_checkpoints(project_id)
+    if response is None:
+        raise HTTPException(status_code=404, detail="checkpoints were not found")
 
     return response
 

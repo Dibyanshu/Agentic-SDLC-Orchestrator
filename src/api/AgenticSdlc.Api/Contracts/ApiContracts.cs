@@ -31,3 +31,15 @@ public sealed record SectionResponse(
 public sealed record SectionsResponse(
     string ProjectId,
     IReadOnlyList<SectionResponse> Sections);
+
+public sealed record CheckpointResponse(
+    long Id,
+    string ProjectId,
+    string CurrentNode,
+    string Status,
+    object? GraphState,
+    DateTimeOffset CreatedAt);
+
+public sealed record CheckpointsResponse(
+    string ProjectId,
+    IReadOnlyList<CheckpointResponse> Checkpoints);

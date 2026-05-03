@@ -91,6 +91,20 @@ app.MapGet("/sections/{projectId}", async (string projectId, IProjectStore store
 })
 .WithName("GetSections");
 
+app.MapGet("/checkpoints/{projectId}", async (string projectId, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.GetCheckpointsAsync(projectId, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("checkpoints_not_found", "Checkpoints were not found."))
+        : Results.Ok(response);
+})
+.WithName("GetCheckpoints");
+
 app.MapPost("/hitl/action", async (HitlActionRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
 {
     var allowedActions = new[] { "approve", "edit", "regenerate" };

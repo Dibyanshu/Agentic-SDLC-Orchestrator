@@ -6,6 +6,8 @@ from app.graph.nodes.pm_node import pm_node
 from app.persistence.checkpoint_store import MySqlCheckpointStore
 from app.persistence.section_store import SectionStore
 from app.schemas.contracts import (
+    CheckpointResponse,
+    CheckpointsResponse,
     HitlActionRequest,
     SectionResponse,
     SectionsResponse,
@@ -140,6 +142,26 @@ def get_sections(project_id: str) -> SectionsResponse | None:
             )
 
     return SectionsResponse(project_id=project_id, sections=sections)
+
+
+def get_checkpoints(project_id: str) -> CheckpointsResponse | None:
+    rows = _CHECKPOINT_STORE.list(project_id)
+    if not rows:
+        return None
+
+    checkpoints = [
+        CheckpointResponse(
+            id=row["id"],
+            project_id=row["project_id"],
+            current_node=row["current_node"],
+            status=row["status"],
+            graph_state=row["graph_state"],
+            created_at=row["created_at"],
+        )
+        for row in rows
+    ]
+
+    return CheckpointsResponse(project_id=project_id, checkpoints=checkpoints)
 
 
 def _apply_section_edit(state: AgentState, request: HitlActionRequest) -> None:

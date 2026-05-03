@@ -9,6 +9,7 @@ public interface IAgentServiceClient
     Task<WorkflowResponse> SendHitlActionAsync(HitlActionRequest request, CancellationToken cancellationToken);
     Task<WorkflowResponse?> GetWorkflowStateAsync(string projectId, CancellationToken cancellationToken);
     Task<SectionsResponse?> GetSectionsAsync(string projectId, CancellationToken cancellationToken);
+    Task<CheckpointsResponse?> GetCheckpointsAsync(string projectId, CancellationToken cancellationToken);
 }
 
 public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceClient
@@ -51,5 +52,17 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
 
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<SectionsResponse>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<CheckpointsResponse?> GetCheckpointsAsync(string projectId, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.GetAsync($"/checkpoints/{projectId}", cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CheckpointsResponse>(cancellationToken: cancellationToken);
     }
 }
