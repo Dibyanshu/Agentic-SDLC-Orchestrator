@@ -111,3 +111,22 @@ public sealed record WorkflowMetricsResponse(
     int LlmCallCount,
     int RefinementCount,
     IReadOnlyList<NodeLatencyMetric> LatencyByNode);
+
+public sealed record RagSourceCreateRequest(
+    string ProjectId,
+    string FileName,
+    string Content,
+    string SourceType);
+
+public sealed record RagSourceResponse(
+    string Id,
+    string ProjectId,
+    string FileName,
+    string SourceType,
+    string ContentHash,
+    int ChunkCount,
+    DateTimeOffset CreatedAt);
+
+public sealed record RagSourcesResponse(
+    string ProjectId,
+    IReadOnlyList<RagSourceResponse> Sources);

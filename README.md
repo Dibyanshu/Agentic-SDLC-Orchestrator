@@ -20,7 +20,7 @@ The first implementation slice has been scaffolded:
 - MySQL migration scripts in `infra/mysql/migrations`
 - Docker Compose runtime in `infra/docker-compose.yml`
 
-The current Python workflow is a deterministic stub that can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. Project records, generated sections, section versions, checkpoints, and HITL refinement logs are now written to MySQL. The LLM and RAG adapters are scaffolded for the next implementation slice.
+The current Python workflow is a deterministic stub that can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. Project records, generated sections, section versions, checkpoints, HITL refinement logs, TXT RAG source metadata, and LLM context chunk traces are now written to MySQL. TXT context sources are indexed into Chroma and retrieved by the context builder before PM, BA, and Architect generation.
 
 ## Prerequisites
 
@@ -303,6 +303,22 @@ Get workflow metrics:
 GET http://localhost:8080/metrics/workflow/<project id>
 ```
 
+Upload and list TXT RAG context:
+
+```http
+POST http://localhost:8080/rag/sources
+Content-Type: application/json
+
+{
+  "projectId": "<project id>",
+  "fileName": "context.txt",
+  "content": "Relevant project background and constraints.",
+  "sourceType": "txt"
+}
+
+GET http://localhost:8080/rag/sources/<project id>
+```
+
 ## Verified Commands
 
 The following commands were verified successfully:
@@ -314,4 +330,6 @@ Invoke-RestMethod -Uri http://localhost:8000/health
 Invoke-RestMethod -Uri http://localhost:8080/health
 & 'C:\Program Files\dotnet\dotnet.exe' build src/api/AgenticSdlc.Api/AgenticSdlc.Api.csproj
 python -m compileall src/agent-service/app
+cd src/ui/orchestrator-ui
+npm run build
 ```

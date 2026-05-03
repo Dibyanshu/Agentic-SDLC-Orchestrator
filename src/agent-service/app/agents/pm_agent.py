@@ -15,7 +15,7 @@ def generate_prd(
     project_id: str,
     artifacts: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, str]:
-    context = build_context("PRD", artifacts or {})
+    context = build_context("PRD", artifacts or {}, project_id=project_id)
     return run_json_agent(
         project_id=project_id,
         node_name="pm_node",

@@ -12,7 +12,7 @@ def generate_ba(
     project_id: str,
     artifacts: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, str]:
-    context = build_context("BA", artifacts or {"PRD": prd})
+    context = build_context("BA", artifacts or {"PRD": prd}, project_id=project_id)
     return run_json_agent(
         project_id=project_id,
         node_name="ba_node",

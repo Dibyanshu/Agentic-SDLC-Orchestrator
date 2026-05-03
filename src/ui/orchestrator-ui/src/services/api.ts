@@ -3,6 +3,7 @@ import type {
   ArtifactType,
   LlmLog,
   Project,
+  RagSource,
   Section,
   SectionVersion,
   WorkflowMetrics,
@@ -81,4 +82,19 @@ export async function getLogs(projectId: string): Promise<LlmLog[]> {
 export async function getMetrics(projectId: string): Promise<WorkflowMetrics> {
   const response = await client.get<WorkflowMetrics>(`/metrics/workflow/${projectId}`);
   return response.data;
+}
+
+export async function uploadRagSource(projectId: string, fileName: string, content: string): Promise<RagSource> {
+  const response = await client.post<RagSource>("/rag/sources", {
+    projectId,
+    fileName,
+    content,
+    sourceType: "txt",
+  });
+  return response.data;
+}
+
+export async function getRagSources(projectId: string): Promise<RagSource[]> {
+  const response = await client.get<{ sources: RagSource[] }>(`/rag/sources/${projectId}`);
+  return response.data.sources;
 }

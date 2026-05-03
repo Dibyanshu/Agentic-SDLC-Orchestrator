@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
+from app.context.rag_ingestion import ingest_txt_source, list_rag_sources
 from app.graph.runner import (
     get_checkpoints,
     get_llm_logs,
@@ -19,6 +20,9 @@ from app.schemas.contracts import (
     HealthResponse,
     HitlActionRequest,
     LlmLogsResponse,
+    RagSourceCreateRequest,
+    RagSourceResponse,
+    RagSourcesResponse,
     SectionResponse,
     SectionVersionsResponse,
     SectionsResponse,
@@ -140,6 +144,27 @@ def project_llm_logs(project_id: str) -> LlmLogsResponse:
 @router.get("/metrics/workflow/{project_id}", response_model=WorkflowMetricsResponse)
 def workflow_metrics(project_id: str) -> WorkflowMetricsResponse:
     return get_workflow_metrics(project_id)
+
+
+@router.post("/rag/sources", response_model=RagSourceResponse)
+def rag_source_create(request: RagSourceCreateRequest) -> RagSourceResponse:
+    if not request.project_id.strip():
+        raise HTTPException(status_code=400, detail="project_id is required")
+
+    if request.source_type != "txt":
+        raise HTTPException(status_code=400, detail="only txt sources are supported")
+
+    try:
+        source = ingest_txt_source(request.project_id, request.file_name.strip() or "source.txt", request.content)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return RagSourceResponse(**source)
+
+
+@router.get("/rag/sources/{project_id}", response_model=RagSourcesResponse)
+def rag_sources(project_id: str) -> RagSourcesResponse:
+    return RagSourcesResponse(projectId=project_id, sources=list_rag_sources(project_id))
 
 
 @router.post("/workflow/hitl", response_model=WorkflowResponse)

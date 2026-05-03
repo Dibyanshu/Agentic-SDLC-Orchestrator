@@ -1,5 +1,5 @@
-import { Activity, FileText, ListChecks, Network, ScrollText } from "lucide-react";
-import type { ArtifactType, Project, WorkflowMetrics } from "../../types/api";
+import { Activity, FileText, ListChecks, Network, ScrollText, Upload } from "lucide-react";
+import type { ArtifactType, Project, RagSource, WorkflowMetrics } from "../../types/api";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 
@@ -13,6 +13,8 @@ type SidebarProps = {
   onProjectNameChange: (value: string) => void;
   onProjectGoalChange: (value: string) => void;
   onCreate: () => void;
+  onSourceUpload: (file: File) => void;
+  sources: RagSource[];
   busy: boolean;
 };
 
@@ -32,6 +34,8 @@ export function Sidebar({
   onProjectNameChange,
   onProjectGoalChange,
   onCreate,
+  onSourceUpload,
+  sources,
   busy,
 }: SidebarProps) {
   return (
@@ -65,6 +69,37 @@ export function Sidebar({
           );
         })}
       </nav>
+      <div className="border-t border-slate-200 p-4">
+        <label className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-700">
+          <Upload className="h-4 w-4" />
+          Context
+        </label>
+        <input
+          type="file"
+          accept=".txt,text/plain"
+          disabled={busy || !project}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) {
+              onSourceUpload(file);
+              event.target.value = "";
+            }
+          }}
+          className="block w-full text-xs text-slate-600 file:mr-2 file:rounded-md file:border-0 file:bg-slate-100 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+        />
+        <div className="mt-3 space-y-2">
+          {sources.length === 0 ? (
+            <div className="text-xs text-slate-500">No context sources.</div>
+          ) : (
+            sources.map((source) => (
+              <div key={source.id} className="rounded-md border border-slate-200 px-2 py-1.5">
+                <div className="truncate text-xs font-semibold text-slate-700">{source.fileName}</div>
+                <div className="text-xs text-slate-500">{source.chunkCount} chunks</div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
       <div className="mt-auto border-t border-slate-200 p-4 text-xs text-slate-500">
         <div className="mb-2 flex items-center gap-2 font-bold text-slate-700">
           <ScrollText className="h-4 w-4" />

@@ -16,7 +16,7 @@ def generate_architecture(
     artifacts: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, str]:
     current_artifacts = artifacts or {"BA": ba}
-    context = build_context("ARCH", current_artifacts)
+    context = build_context("ARCH", current_artifacts, project_id=project_id)
     return run_json_agent(
         project_id=project_id,
         node_name="architect_node",

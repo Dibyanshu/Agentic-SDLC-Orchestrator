@@ -22,6 +22,8 @@ public interface IAgentServiceClient
     Task<CheckpointsResponse?> GetCheckpointsAsync(string projectId, CancellationToken cancellationToken);
     Task<LlmLogsResponse?> GetLlmLogsAsync(string projectId, CancellationToken cancellationToken);
     Task<WorkflowMetricsResponse?> GetWorkflowMetricsAsync(string projectId, CancellationToken cancellationToken);
+    Task<RagSourceResponse> CreateRagSourceAsync(RagSourceCreateRequest request, CancellationToken cancellationToken);
+    Task<RagSourcesResponse?> GetRagSourcesAsync(string projectId, CancellationToken cancellationToken);
 }
 
 public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceClient
@@ -170,6 +172,31 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
 
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<WorkflowMetricsResponse>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<RagSourceResponse> CreateRagSourceAsync(RagSourceCreateRequest request, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.PostAsJsonAsync("/rag/sources", request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new AgentServiceException(response.StatusCode, ExtractErrorMessage(message));
+        }
+
+        return await response.Content.ReadFromJsonAsync<RagSourceResponse>(cancellationToken: cancellationToken)
+            ?? throw new InvalidOperationException("Agent service returned an empty RAG source response.");
+    }
+
+    public async Task<RagSourcesResponse?> GetRagSourcesAsync(string projectId, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.GetAsync($"/rag/sources/{Escape(projectId)}", cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<RagSourcesResponse>(cancellationToken: cancellationToken);
     }
 
     private static string Escape(string value) => Uri.EscapeDataString(value);

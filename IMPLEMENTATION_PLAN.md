@@ -35,12 +35,13 @@ Completed implementation:
 - `.env` is used for local runtime secrets and is ignored by git.
 - React UI console for project creation, workflow start/resume, section editing/history, HITL actions, agent progress, logs, and metrics.
 - Docker Compose UI service on `http://localhost:5173`.
+- Controlled TXT RAG vertical slice with source metadata in MySQL, chunk storage/retrieval in Chroma, context injection, and `llm_context_chunks` traces.
 
 Still pending:
 
 - Real LLM client execution validated as the default path.
 - OpenAI-mode validation as the default path.
-- Controlled RAG ingestion and retrieval.
+- RAG support for PDF, DOCX, screenshots/OCR, delete source, and advanced ranking.
 - Token budgets and response caching.
 
 ## 1. Target Phase 1 Architecture
@@ -169,7 +170,7 @@ Acceptance criteria:
 - Done: Section updates create a new `section_versions` row.
 - Done: Checkpoints and refinement logs are persisted.
 - Done: LLM logging writes exist for PM, BA, Architect, and node-based regeneration calls.
-- Pending: LLM context chunk writes.
+- Done: LLM context chunk writes for retrieved RAG chunks.
 
 ## 4. Milestone 3 - .NET Control Plane API
 
@@ -417,6 +418,8 @@ Acceptance criteria:
 
 ## 10. Milestone 9 - Controlled RAG
 
+Status: Partially complete with TXT ingestion.
+
 Goal: support document and screenshot context without giving agents direct retrieval control.
 
 Endpoints:
@@ -429,24 +432,25 @@ DELETE /rag/sources/{sourceId}
 
 Tasks:
 
-1. Add upload handling in `.NET API`.
-2. Add ingestion endpoint in Python Agent Service.
+1. Done: Add JSON TXT upload handling in `.NET API`.
+2. Done: Add TXT ingestion endpoint in Python Agent Service.
 3. Implement parsers:
-   - TXT first
-   - PDF second
-   - DOCX third
-   - OCR screenshot last
-4. Chunk parsed text.
-5. Generate embeddings.
-6. Store chunks in Chroma with project, stage, and source tags.
-7. Retrieve top 5, filter to top 3 in Context Builder.
-8. Deduplicate chunks before prompt construction.
+   - Done: TXT first
+   - Pending: PDF second
+   - Pending: DOCX third
+   - Pending: OCR screenshot last
+4. Done: Chunk parsed text.
+5. Done: Generate deterministic local embeddings for TXT chunks.
+6. Done: Store chunks in Chroma with project and source tags.
+7. Done: Retrieve top 5, filter to top 3 in Context Builder.
+8. Pending: deduplicate chunks before prompt construction.
+9. Pending: delete source and remove related Chroma chunks.
 
 Acceptance criteria:
 
-- Uploaded TXT document can influence PRD generation.
-- Context Builder returns at most 3 chunks.
-- LLM logs record which chunks were injected through `llm_context_chunks`.
+- Done: Uploaded TXT document can influence PRD generation.
+- Done: Context Builder returns at most 3 chunks.
+- Done: LLM logs record which chunks were injected through `llm_context_chunks`.
 - Agents do not call retrieval directly.
 
 ## 11. Milestone 10 - Cost Controls and Observability
@@ -535,8 +539,8 @@ Acceptance criteria:
 
 ### P1 - Should Have
 
-- TXT/PDF/DOCX ingestion
-- Chroma retrieval
+- Partial: TXT ingestion implemented; PDF/DOCX pending
+- Done: Chroma retrieval
 - Token budget enforcement
 - Response caching
 - Done: Metrics endpoint

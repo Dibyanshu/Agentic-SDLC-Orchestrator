@@ -219,6 +219,51 @@ app.MapGet("/metrics/workflow/{projectId}", async (string projectId, IProjectSto
 })
 .WithName("GetWorkflowMetrics");
 
+app.MapPost("/rag/sources", async (RagSourceCreateRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(request.ProjectId) ||
+        string.IsNullOrWhiteSpace(request.FileName) ||
+        string.IsNullOrWhiteSpace(request.Content))
+    {
+        return Results.BadRequest(new ErrorResponse("rag_source_validation_failed", "Project id, file name, and content are required."));
+    }
+
+    if (!string.Equals(request.SourceType, "txt", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.BadRequest(new ErrorResponse("rag_source_type_invalid", "Only txt sources are supported."));
+    }
+
+    if (store.Get(request.ProjectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    try
+    {
+        var response = await agentClient.CreateRagSourceAsync(request with { SourceType = "txt" }, cancellationToken);
+        return Results.Created($"/rag/sources/{request.ProjectId}", response);
+    }
+    catch (AgentServiceException exc) when (exc.StatusCode == System.Net.HttpStatusCode.BadRequest)
+    {
+        return Results.BadRequest(new ErrorResponse("rag_source_validation_failed", exc.Message));
+    }
+})
+.WithName("CreateRagSource");
+
+app.MapGet("/rag/sources/{projectId}", async (string projectId, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.GetRagSourcesAsync(projectId, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("rag_sources_not_found", "RAG sources were not found."))
+        : Results.Ok(response);
+})
+.WithName("GetRagSources");
+
 app.MapPost("/hitl/action", async (HitlActionRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
 {
     var allowedActions = new[] { "approve", "edit", "regenerate" };

@@ -15,6 +15,7 @@ import {
   createProject,
   getLogs,
   getMetrics,
+  getRagSources,
   getSectionVersions,
   getSections,
   getWorkflowStatus,
@@ -22,9 +23,10 @@ import {
   resumeWorkflow,
   startWorkflow,
   updateSection,
+  uploadRagSource,
 } from "../services/api";
 import { useAppStore } from "../store/useAppStore";
-import type { ArtifactType, SectionVersion } from "../types/api";
+import type { ArtifactType, RagSource, SectionVersion } from "../types/api";
 
 export function Dashboard() {
   const {
@@ -54,6 +56,7 @@ export function Dashboard() {
   const [hitlInput, setHitlInput] = useState("");
   const [mode, setMode] = useState<"single" | "cascade">("single");
   const [versions, setVersions] = useState<SectionVersion[]>([]);
+  const [sources, setSources] = useState<RagSource[]>([]);
 
   const artifactSections = useMemo(
     () => sections.filter((section) => section.artifactType === selectedArtifact),
@@ -97,6 +100,7 @@ export function Dashboard() {
     setLogs(nextLogs);
     setMetrics(nextMetrics);
     setWorkflow(nextWorkflow);
+    setSources(await getRagSources(projectId));
   }
 
   async function runAction(action: () => Promise<void>, success: string) {
@@ -120,7 +124,17 @@ export function Dashboard() {
       setSections([]);
       setLogs([]);
       setVersions([]);
+      setSources(await getRagSources(nextProject.id));
     }, "Project created");
+  }
+
+  async function handleSourceUpload(file: File) {
+    if (!project) return;
+    await runAction(async () => {
+      const content = await file.text();
+      await uploadRagSource(project.id, file.name, content);
+      setSources(await getRagSources(project.id));
+    }, "Context source indexed");
   }
 
   async function handleStart() {
@@ -233,6 +247,8 @@ export function Dashboard() {
           onProjectNameChange={setProjectName}
           onProjectGoalChange={setProjectGoal}
           onCreate={handleCreate}
+          onSourceUpload={handleSourceUpload}
+          sources={sources}
           busy={busy}
         />
       }

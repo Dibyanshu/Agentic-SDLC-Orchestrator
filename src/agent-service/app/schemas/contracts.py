@@ -157,3 +157,31 @@ class WorkflowMetricsResponse(BaseModel):
     latency_by_node: list[NodeLatencyMetric] = Field(alias="latencyByNode")
 
     model_config = {"populate_by_name": True}
+
+
+class RagSourceCreateRequest(BaseModel):
+    project_id: str = Field(alias="projectId")
+    file_name: str = Field(alias="fileName")
+    content: str
+    source_type: str = Field(default="txt", alias="sourceType")
+
+    model_config = {"populate_by_name": True}
+
+
+class RagSourceResponse(BaseModel):
+    id: str
+    project_id: str = Field(alias="projectId")
+    file_name: str = Field(alias="fileName")
+    source_type: str = Field(alias="sourceType")
+    content_hash: str = Field(alias="contentHash")
+    chunk_count: int = Field(alias="chunkCount")
+    created_at: str = Field(alias="createdAt")
+
+    model_config = {"populate_by_name": True}
+
+
+class RagSourcesResponse(BaseModel):
+    project_id: str = Field(alias="projectId")
+    sources: list[RagSourceResponse]
+
+    model_config = {"populate_by_name": True}

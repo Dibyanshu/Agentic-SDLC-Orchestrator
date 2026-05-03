@@ -97,6 +97,17 @@ CREATE TABLE IF NOT EXISTS llm_context_chunks (
   CONSTRAINT fk_llm_context_chunks_logs FOREIGN KEY (llm_log_id) REFERENCES llm_logs(id)
 );
 
+CREATE TABLE IF NOT EXISTS rag_sources (
+  id VARCHAR(50) PRIMARY KEY,
+  project_id VARCHAR(50) NOT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  source_type VARCHAR(50) NOT NULL,
+  content_hash VARCHAR(64) NOT NULL,
+  chunk_count INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_rag_sources_projects FOREIGN KEY (project_id) REFERENCES projects(id)
+);
+
 CREATE INDEX idx_artifacts_project_id ON artifacts(project_id);
 CREATE INDEX idx_sections_artifact_id ON sections(artifact_id);
 CREATE INDEX idx_section_versions_section_id ON section_versions(section_id);
@@ -105,4 +116,4 @@ CREATE INDEX idx_llm_logs_project_id ON llm_logs(project_id);
 CREATE INDEX idx_llm_logs_section_id ON llm_logs(section_id);
 CREATE INDEX idx_llm_logs_node_name ON llm_logs(node_name);
 CREATE INDEX idx_llm_logs_created_at ON llm_logs(created_at);
-
+CREATE INDEX idx_rag_sources_project_id ON rag_sources(project_id);

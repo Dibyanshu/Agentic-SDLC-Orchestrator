@@ -63,3 +63,13 @@ export type WorkflowMetrics = {
     averageLatencyMs: number;
   }>;
 };
+
+export type RagSource = {
+  id: string;
+  projectId: string;
+  fileName: string;
+  sourceType: string;
+  contentHash: string;
+  chunkCount: number;
+  createdAt: string;
+};

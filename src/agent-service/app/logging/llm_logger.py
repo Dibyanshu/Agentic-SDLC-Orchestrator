@@ -73,6 +73,21 @@ class LlmLogger:
                         ),
                     )
                     log_id = int(cursor.lastrowid)
+                    for chunk in payload.get("context_payload", {}).get("rag_chunks", []):
+                        cursor.execute(
+                            """
+                            INSERT INTO llm_context_chunks (
+                              llm_log_id, chunk_id, relevance_score, source_type
+                            )
+                            VALUES (%s, %s, %s, %s)
+                            """,
+                            (
+                                log_id,
+                                str(chunk.get("chunk_id", "")),
+                                Decimal(str(chunk.get("relevance_score", 0))),
+                                str(chunk.get("source_type", "txt")),
+                            ),
+                        )
                 connection.commit()
                 return log_id
             except Exception:

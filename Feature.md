@@ -71,6 +71,14 @@ Last updated: 2026-05-03
   - Project creation and workflow start/resume
   - Agents panel, section tabs/editor/history, HITL action panel, logs, and metrics
   - Docker Compose `ui` service
+- Controlled TXT RAG vertical slice implemented:
+  - API: `POST /rag/sources`
+  - API: `GET /rag/sources/{projectId}`
+  - Agent service stores source metadata in MySQL.
+  - Agent service chunks TXT content and stores embeddings in Chroma.
+  - Context builder retrieves up to 3 Chroma chunks for PM, BA, and Architect generation.
+  - Retrieved chunks are traced in `llm_context_chunks`.
+  - UI supports TXT context upload and source listing.
 - Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
 - Agent service section writes now persist generated and edited sections to MySQL.
 - Section updates now create `section_versions` rows on create, regeneration, and edit paths.
@@ -87,7 +95,6 @@ Last updated: 2026-05-03
 
 ### Not Started
 
-- Controlled RAG ingestion and retrieval.
 - Token budget enforcement.
 - Response caching.
 - Workflow resume from persisted checkpoint.
