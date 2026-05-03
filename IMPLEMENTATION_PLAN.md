@@ -38,7 +38,7 @@ Still pending:
 - OpenAI-mode validation as the default path.
 - Workflow resume endpoint.
 - Max refinement loop enforcement.
-- API/Python automated tests.
+- REACT UI creation and integration [Feature-UI.md]
 - Controlled RAG ingestion and retrieval.
 - Token budgets, response caching, and metrics.
 
