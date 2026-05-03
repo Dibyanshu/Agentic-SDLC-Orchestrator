@@ -1,13 +1,15 @@
-import hashlib
 import json
 from datetime import datetime, timezone
 from typing import Any
 
 from app.llm.llm_client import LlmClient
+from app.llm.llm_client import LlmConfigurationError
 from app.llm.prompt_templates import PROMPT_TEMPLATE_VERSION
+from app.llm.settings import agent_key_for_node
 from app.llm.token_budget import TokenBudgetExceededError, validate_token_budget
 from app.logging.llm_logger import LlmLogger
 from app.persistence.llm_cache_store import LlmCacheStore
+from app.persistence.llm_settings_store import LlmSettingsStore
 
 
 def run_json_agent(
@@ -20,11 +22,13 @@ def run_json_agent(
     context: dict[str, Any],
     required_keys: set[str],
 ) -> dict[str, str]:
-    cache_key = _cache_key(system_prompt, user_prompt, context)
+    settings = LlmSettingsStore().get_agent_settings(project_id, agent_key_for_node(node_name))
+    cache_key = build_cache_key(system_prompt, user_prompt, context, settings)
     logger = LlmLogger()
     cache = LlmCacheStore()
     client = LlmClient()
     start_time = datetime.now(timezone.utc)
+    context_with_settings = _context_with_settings(context, settings)
 
     try:
         estimated_input_tokens = validate_token_budget(
@@ -32,6 +36,7 @@ def run_json_agent(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             context=context,
+            token_budget=settings.token_budget,
         )
     except TokenBudgetExceededError as exc:
         end_time = datetime.now(timezone.utc)
@@ -45,7 +50,7 @@ def run_json_agent(
                 "system_prompt": system_prompt,
                 "user_prompt": user_prompt,
                 "context_payload": {
-                    **context,
+                    **context_with_settings,
                     "token_budget": exc.budget,
                     "estimated_input_tokens": exc.estimated_tokens,
                 },
@@ -79,7 +84,7 @@ def run_json_agent(
                 "prompt_template_version": PROMPT_TEMPLATE_VERSION,
                 "system_prompt": system_prompt,
                 "user_prompt": user_prompt,
-                "context_payload": context,
+                "context_payload": context_with_settings,
                 "response_text": cached["response_text"],
                 "response_format": "json",
                 "status": "success",
@@ -100,7 +105,7 @@ def run_json_agent(
     for attempt in range(1, 4):
         start_time = datetime.now(timezone.utc)
         try:
-            result = client.complete(system_prompt, user_prompt, context)
+            result = client.complete(system_prompt, user_prompt, context, settings, required_keys)
             payload = _parse_required_json(result.text, required_keys, agent_name)
             end_time = datetime.now(timezone.utc)
             logger.log(
@@ -112,7 +117,7 @@ def run_json_agent(
                     "prompt_template_version": PROMPT_TEMPLATE_VERSION,
                     "system_prompt": system_prompt,
                     "user_prompt": user_prompt,
-                    "context_payload": context,
+                    "context_payload": context_with_settings,
                     "response_text": result.text,
                     "response_format": "json",
                     "status": "success",
@@ -136,6 +141,34 @@ def run_json_agent(
                 context_payload=context,
             )
             return payload
+        except LlmConfigurationError as exc:
+            end_time = datetime.now(timezone.utc)
+            logger.log(
+                {
+                    "project_id": project_id,
+                    "node_name": node_name,
+                    "agent_name": agent_name,
+                    "model_name": f"{settings.provider}:{settings.model}",
+                    "prompt_template_version": PROMPT_TEMPLATE_VERSION,
+                    "system_prompt": system_prompt,
+                    "user_prompt": user_prompt,
+                    "context_payload": {**context_with_settings, "attempt": attempt},
+                    "response_text": None,
+                    "response_format": "json",
+                    "status": "configuration_error",
+                    "error_message": str(exc),
+                    "input_tokens": estimated_input_tokens,
+                    "output_tokens": 0,
+                    "total_tokens": estimated_input_tokens,
+                    "estimated_cost": 0,
+                    "latency_ms": int((end_time - start_time).total_seconds() * 1000),
+                    "cache_hit": False,
+                    "cache_key": cache_key,
+                    "start_time": start_time,
+                    "end_time": end_time,
+                }
+            )
+            raise
         except Exception as exc:
             last_error = exc
             end_time = datetime.now(timezone.utc)
@@ -148,7 +181,7 @@ def run_json_agent(
                     "prompt_template_version": PROMPT_TEMPLATE_VERSION,
                     "system_prompt": system_prompt,
                     "user_prompt": user_prompt,
-                    "context_payload": {**context, "attempt": attempt},
+                    "context_payload": {**context_with_settings, "attempt": attempt},
                     "response_text": None,
                     "response_format": "json",
                     "status": "failure",
@@ -186,17 +219,13 @@ def _parse_required_json(
     return {key: str(payload[key]) for key in sorted(required_keys)}
 
 
-def _cache_key(
-    system_prompt: str,
-    user_prompt: str,
-    context: dict[str, Any],
-) -> str:
-    raw = json.dumps(
-        {
-            "system_prompt": system_prompt,
-            "user_prompt": user_prompt,
-            "context": context,
+def _context_with_settings(context: dict[str, Any], settings: Any) -> dict[str, Any]:
+    return {
+        **context,
+        "llm_settings": {
+            "provider": settings.provider,
+            "model": settings.model,
+            "token_budget": settings.token_budget,
         },
-        sort_keys=True,
-    )
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    }
+from app.llm.cache_key import build_cache_key

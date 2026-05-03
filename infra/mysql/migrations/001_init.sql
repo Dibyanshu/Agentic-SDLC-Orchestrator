@@ -119,6 +119,18 @@ CREATE TABLE IF NOT EXISTS llm_response_cache (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS project_llm_settings (
+  project_id VARCHAR(50) NOT NULL,
+  agent_name VARCHAR(50) NOT NULL,
+  provider VARCHAR(50) NOT NULL,
+  model VARCHAR(100) NOT NULL,
+  token_budget INT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (project_id, agent_name),
+  CONSTRAINT fk_project_llm_settings_projects FOREIGN KEY (project_id) REFERENCES projects(id)
+);
+
 CREATE INDEX idx_artifacts_project_id ON artifacts(project_id);
 CREATE INDEX idx_sections_artifact_id ON sections(artifact_id);
 CREATE INDEX idx_section_versions_section_id ON section_versions(section_id);

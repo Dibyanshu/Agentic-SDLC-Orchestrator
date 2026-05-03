@@ -130,3 +130,23 @@ public sealed record RagSourceResponse(
 public sealed record RagSourcesResponse(
     string ProjectId,
     IReadOnlyList<RagSourceResponse> Sources);
+
+public sealed record AgentLlmSettingsResponse(
+    string Provider,
+    string Model,
+    int TokenBudget);
+
+public sealed record ProjectLlmSettingsResponse(
+    string ProjectId,
+    IReadOnlyDictionary<string, AgentLlmSettingsResponse> Agents);
+
+public sealed record ProjectLlmSettingsUpdateRequest(
+    IReadOnlyDictionary<string, AgentLlmSettingsResponse> Agents);
+
+public sealed record LlmProviderResponse(
+    string Provider,
+    string DefaultModel,
+    bool ApiKeyConfigured);
+
+public sealed record LlmProvidersResponse(
+    IReadOnlyList<LlmProviderResponse> Providers);

@@ -23,9 +23,10 @@ def validate_token_budget(
     system_prompt: str,
     user_prompt: str,
     context: dict[str, Any],
+    token_budget: int | None = None,
 ) -> int:
     estimated_tokens = estimate_input_tokens(system_prompt, user_prompt, context)
-    budget = token_budget_for_node(node_name)
+    budget = token_budget or token_budget_for_node(node_name)
     if estimated_tokens > budget:
         raise TokenBudgetExceededError(node_name, estimated_tokens, budget)
 

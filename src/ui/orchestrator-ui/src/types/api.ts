@@ -73,3 +73,22 @@ export type RagSource = {
   chunkCount: number;
   createdAt: string;
 };
+
+export type LlmProvider = "stub" | "openai" | "gemini" | "claude";
+
+export type LlmProviderInfo = {
+  provider: LlmProvider;
+  defaultModel: string;
+  apiKeyConfigured: boolean;
+};
+
+export type AgentLlmSettings = {
+  provider: LlmProvider;
+  model: string;
+  tokenBudget: number;
+};
+
+export type ProjectLlmSettings = {
+  projectId: string;
+  agents: Record<"pm" | "ba" | "architect", AgentLlmSettings>;
+};

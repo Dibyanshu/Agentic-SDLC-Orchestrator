@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Rocket } from "lucide-react";
 import { AgentsPanel } from "../components/domain/AgentsPanel";
 import { HITLPanel } from "../components/domain/HITLPanel";
+import { LlmSettingsPanel } from "../components/domain/LlmSettingsPanel";
 import { LogsTable } from "../components/domain/LogsTable";
 import { SectionEditor } from "../components/domain/SectionEditor";
 import { SectionHistory } from "../components/domain/SectionHistory";
@@ -13,8 +14,10 @@ import { Textarea } from "../components/ui/Textarea";
 import { AppLayout } from "../layouts/AppLayout";
 import {
   createProject,
+  getLlmProviders,
   getLogs,
   getMetrics,
+  getProjectLlmSettings,
   getRagSources,
   getSectionVersions,
   getSections,
@@ -23,10 +26,11 @@ import {
   resumeWorkflow,
   startWorkflow,
   updateSection,
+  updateProjectLlmSettings,
   uploadRagSource,
 } from "../services/api";
 import { useAppStore } from "../store/useAppStore";
-import type { ArtifactType, RagSource, SectionVersion } from "../types/api";
+import type { AgentLlmSettings, ArtifactType, LlmProviderInfo, ProjectLlmSettings, RagSource, SectionVersion } from "../types/api";
 
 export function Dashboard() {
   const {
@@ -57,6 +61,8 @@ export function Dashboard() {
   const [mode, setMode] = useState<"single" | "cascade">("single");
   const [versions, setVersions] = useState<SectionVersion[]>([]);
   const [sources, setSources] = useState<RagSource[]>([]);
+  const [providers, setProviders] = useState<LlmProviderInfo[]>([]);
+  const [llmSettings, setLlmSettings] = useState<ProjectLlmSettings>();
 
   const artifactSections = useMemo(
     () => sections.filter((section) => section.artifactType === selectedArtifact),
@@ -75,6 +81,12 @@ export function Dashboard() {
     setDraft(String(currentSection?.content ?? ""));
     setHitlInput(String(currentSection?.content ?? ""));
   }, [currentSection]);
+
+  useEffect(() => {
+    getLlmProviders()
+      .then(setProviders)
+      .catch(() => setProviders([]));
+  }, []);
 
   useEffect(() => {
     if (!project || !currentSection) {
@@ -101,6 +113,7 @@ export function Dashboard() {
     setMetrics(nextMetrics);
     setWorkflow(nextWorkflow);
     setSources(await getRagSources(projectId));
+    setLlmSettings(await getProjectLlmSettings(projectId));
   }
 
   async function runAction(action: () => Promise<void>, success: string) {
@@ -125,6 +138,7 @@ export function Dashboard() {
       setLogs([]);
       setVersions([]);
       setSources(await getRagSources(nextProject.id));
+      setLlmSettings(await getProjectLlmSettings(nextProject.id));
     }, "Project created");
   }
 
@@ -139,11 +153,47 @@ export function Dashboard() {
 
   async function handleStart() {
     if (!project) return;
+    const missingKey = findMissingProviderKey();
+    if (missingKey) {
+      setMessage(`${missingKey} API key is not configured in .env`);
+      return;
+    }
     await runAction(async () => {
       const nextWorkflow = await startWorkflow(project.id, workflowInput);
       setWorkflow(nextWorkflow);
       await refresh(project.id);
     }, "Workflow started");
+  }
+
+  async function handleLlmSettingsSave() {
+    if (!project || !llmSettings) return;
+    await runAction(async () => {
+      setLlmSettings(await updateProjectLlmSettings(project.id, llmSettings));
+    }, "LLM settings saved");
+  }
+
+  function handleLlmSettingsChange(agent: "pm" | "ba" | "architect", settings: AgentLlmSettings) {
+    if (!llmSettings) return;
+    setLlmSettings({
+      ...llmSettings,
+      agents: {
+        ...llmSettings.agents,
+        [agent]: settings,
+      },
+    });
+  }
+
+  function findMissingProviderKey() {
+    if (!llmSettings) return undefined;
+    for (const settings of Object.values(llmSettings.agents)) {
+      if (settings.provider === "stub") continue;
+      const provider = providers.find((item) => item.provider === settings.provider);
+      if (!provider?.apiKeyConfigured) {
+        return settings.provider;
+      }
+    }
+
+    return undefined;
   }
 
   async function handleSave() {
@@ -207,6 +257,13 @@ export function Dashboard() {
         ) : null}
       </header>
       <AgentsPanel workflow={workflow} />
+      <LlmSettingsPanel
+        settings={llmSettings}
+        providers={providers}
+        busy={busy || !project}
+        onChange={handleLlmSettingsChange}
+        onSave={handleLlmSettingsSave}
+      />
       <div className="rounded-lg border border-slate-200 bg-white px-4 shadow-card">
         <SectionTabs
           artifact={selectedArtifact}

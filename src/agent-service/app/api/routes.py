@@ -1,6 +1,10 @@
 from fastapi import APIRouter, HTTPException
 
 from app.context.rag_ingestion import ingest_txt_source, list_rag_sources
+from app.llm.llm_client import LlmConfigurationError
+from app.llm.settings import AgentLlmSettings
+from app.llm.token_budget import TokenBudgetExceededError
+from app.persistence.llm_settings_store import LlmSettingsStore
 from app.graph.runner import (
     get_checkpoints,
     get_llm_logs,
@@ -20,6 +24,9 @@ from app.schemas.contracts import (
     HealthResponse,
     HitlActionRequest,
     LlmLogsResponse,
+    LlmProvidersResponse,
+    ProjectLlmSettingsResponse,
+    ProjectLlmSettingsUpdateRequest,
     RagSourceCreateRequest,
     RagSourceResponse,
     RagSourcesResponse,
@@ -34,6 +41,7 @@ from app.schemas.contracts import (
 )
 
 router = APIRouter()
+_LLM_SETTINGS = LlmSettingsStore()
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -46,7 +54,10 @@ def workflow_start(request: StartWorkflowRequest) -> WorkflowResponse:
     if not request.project_id.strip() or not request.input.strip():
         raise HTTPException(status_code=400, detail="project_id and input are required")
 
-    return start_workflow(request)
+    try:
+        return start_workflow(request)
+    except (LlmConfigurationError, TokenBudgetExceededError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/workflow/resume", response_model=WorkflowResponse)
@@ -56,6 +67,8 @@ def workflow_resume(request: ResumeWorkflowRequest) -> WorkflowResponse:
 
     try:
         return resume_workflow(request)
+    except (LlmConfigurationError, TokenBudgetExceededError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -146,6 +159,40 @@ def workflow_metrics(project_id: str) -> WorkflowMetricsResponse:
     return get_workflow_metrics(project_id)
 
 
+@router.get("/llm/providers", response_model=LlmProvidersResponse)
+def llm_providers() -> LlmProvidersResponse:
+    return LlmProvidersResponse(providers=_LLM_SETTINGS.list_providers())
+
+
+@router.get("/projects/{project_id}/llm-settings", response_model=ProjectLlmSettingsResponse)
+def project_llm_settings(project_id: str) -> ProjectLlmSettingsResponse:
+    settings = _LLM_SETTINGS.get_project_settings(project_id)
+    return ProjectLlmSettingsResponse(projectId=project_id, agents=_to_llm_settings_response(settings))
+
+
+@router.put("/projects/{project_id}/llm-settings", response_model=ProjectLlmSettingsResponse)
+def project_llm_settings_update(
+    project_id: str,
+    request: ProjectLlmSettingsUpdateRequest,
+) -> ProjectLlmSettingsResponse:
+    try:
+        settings = _LLM_SETTINGS.save_project_settings(
+            project_id,
+            {
+                agent_name: AgentLlmSettings(
+                    provider=agent_settings.provider,
+                    model=agent_settings.model,
+                    token_budget=agent_settings.token_budget,
+                )
+                for agent_name, agent_settings in request.agents.items()
+            },
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return ProjectLlmSettingsResponse(projectId=project_id, agents=_to_llm_settings_response(settings))
+
+
 @router.post("/rag/sources", response_model=RagSourceResponse)
 def rag_source_create(request: RagSourceCreateRequest) -> RagSourceResponse:
     if not request.project_id.strip():
@@ -174,7 +221,20 @@ def workflow_hitl(request: HitlActionRequest) -> WorkflowResponse:
 
     try:
         return handle_hitl_action(request)
+    except (LlmConfigurationError, TokenBudgetExceededError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except WorkflowValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+def _to_llm_settings_response(settings: dict[str, AgentLlmSettings]) -> dict[str, dict[str, object]]:
+    return {
+        agent_name: {
+            "provider": agent_settings.provider,
+            "model": agent_settings.model,
+            "tokenBudget": agent_settings.token_budget,
+        }
+        for agent_name, agent_settings in settings.items()
+    }

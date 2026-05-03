@@ -89,6 +89,16 @@ Assert-True ($source.chunkCount -gt 0) "RAG source had no chunks."
 $sources = Invoke-Json -Method Get -Uri "$ApiBaseUrl/rag/sources/$($project.id)"
 Assert-True ($sources.sources.Count -ge 1) "RAG source was not listed."
 
+Write-Host "Saving per-agent LLM settings..."
+$settings = Invoke-Json -Method Put -Uri "$ApiBaseUrl/projects/$($project.id)/llm-settings" -Body @{
+    agents = @{
+        pm = @{ provider = "stub"; model = "stub"; tokenBudget = 3100 }
+        ba = @{ provider = "stub"; model = "stub"; tokenBudget = 3200 }
+        architect = @{ provider = "stub"; model = "stub"; tokenBudget = 4300 }
+    }
+}
+Assert-True ($settings.agents.pm.tokenBudget -eq 3100) "PM LLM settings were not saved."
+
 Write-Host "Starting workflow..."
 $workflow = Invoke-Json -Method Post -Uri "$ApiBaseUrl/workflow/start" -Body @{
     projectId = $project.id
@@ -102,6 +112,8 @@ Assert-True (($sections.sections | Where-Object { $_.artifactType -eq "PRD" }).C
 $logs = Invoke-Json -Method Get -Uri "$ApiBaseUrl/logs/llm/$($project.id)"
 Assert-True ($logs.logs.Count -ge 1) "No LLM logs were recorded."
 Assert-True ($logs.logs[0].contextPayload.rag_chunks.Count -ge 1) "LLM log did not include RAG chunks."
+Assert-True ($logs.logs[0].contextPayload.llm_settings.provider -eq "stub") "LLM log did not include selected provider."
+Assert-True ($logs.logs[0].contextPayload.llm_settings.token_budget -eq 3100) "LLM log did not include selected token budget."
 
 Write-Host "Approving PRD, BA, and Architecture..."
 $workflow = Invoke-Json -Method Post -Uri "$ApiBaseUrl/hitl/action" -Body @{
@@ -138,6 +150,16 @@ $cacheProjectB = Invoke-Json -Method Post -Uri "$ApiBaseUrl/projects" -Body @{
     name = "Cache B $suffix"
     goal = "Validate response cache"
 }
+
+$cacheSettings = @{
+    agents = @{
+        pm = @{ provider = "stub"; model = "stub"; tokenBudget = 3000 }
+        ba = @{ provider = "stub"; model = "stub"; tokenBudget = 3000 }
+        architect = @{ provider = "stub"; model = "stub"; tokenBudget = 4000 }
+    }
+}
+$null = Invoke-Json -Method Put -Uri "$ApiBaseUrl/projects/$($cacheProjectA.id)/llm-settings" -Body $cacheSettings
+$null = Invoke-Json -Method Put -Uri "$ApiBaseUrl/projects/$($cacheProjectB.id)/llm-settings" -Body $cacheSettings
 
 $null = Invoke-Json -Method Post -Uri "$ApiBaseUrl/workflow/start" -Body @{
     projectId = $cacheProjectA.id

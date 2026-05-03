@@ -20,7 +20,7 @@ The first implementation slice has been scaffolded:
 - MySQL migration scripts in `infra/mysql/migrations`
 - Docker Compose runtime in `infra/docker-compose.yml`
 
-The current Python workflow is a deterministic stub that can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. Project records, generated sections, section versions, checkpoints, HITL refinement logs, TXT RAG source metadata, LLM response cache entries, and LLM context chunk traces are now written to MySQL. TXT context sources are indexed into Chroma and retrieved by the context builder before PM, BA, and Architect generation. Agent calls enforce per-node input token budgets before the provider call and reuse cached responses for repeated prompt/context pairs.
+The current Python workflow can generate initial PRD sections, pause for HITL, approve into BA, approve into Architecture, and complete. Project records, generated sections, section versions, checkpoints, HITL refinement logs, TXT RAG source metadata, per-agent LLM settings, LLM response cache entries, and LLM context chunk traces are now written to MySQL. TXT context sources are indexed into Chroma and retrieved by the context builder before PM, BA, and Architect generation. PM, BA, and Architect can each use `stub`, OpenAI, Gemini, or Claude with project-specific model and input token budget settings.
 
 ## Prerequisites
 
@@ -46,7 +46,7 @@ Copy environment defaults:
 cp .env.example .env
 ```
 
-Keep real local secrets such as `OPENAI_API_KEY` in `.env`. The `.env` file is intentionally ignored by git; `.env.example` should stay as the safe template with empty/example values.
+Keep real local secrets such as `OPENAI_API_KEY`, `GEMINI_API_KEY`, and `ANTHROPIC_API_KEY` in `.env`. The `.env` file is intentionally ignored by git; `.env.example` should stay as the safe template with empty/example values.
 
 Build and start the stack:
 
@@ -116,12 +116,16 @@ CHROMA_URL=http://localhost:8002
 
 Container-to-container traffic still uses internal service names, so changing `CHROMA_HOST_PORT` only affects access from your host machine.
 
-LLM execution defaults to the deterministic stub provider so local smoke tests do not spend tokens. To use OpenAI for agent generation, set these values in `.env`:
+LLM execution defaults to the deterministic stub provider so local smoke tests do not spend tokens. Provider keys stay in `.env`; the UI only selects provider, model, and token budget per project agent.
 
 ```env
 LLM_PROVIDER=openai
 OPENAI_MODEL=gpt-4o-mini
 OPENAI_API_KEY=<your key>
+GEMINI_MODEL=gemini-2.5-flash
+GEMINI_API_KEY=<your key>
+CLAUDE_MODEL=claude-3-5-sonnet-20241022
+ANTHROPIC_API_KEY=<your key>
 ```
 
 ## Local Run
@@ -309,6 +313,25 @@ Get workflow metrics:
 
 ```http
 GET http://localhost:8080/metrics/workflow/<project id>
+```
+
+Inspect and update project LLM settings:
+
+```http
+GET http://localhost:8080/llm/providers
+
+GET http://localhost:8080/projects/<project id>/llm-settings
+
+PUT http://localhost:8080/projects/<project id>/llm-settings
+Content-Type: application/json
+
+{
+  "agents": {
+    "pm": { "provider": "stub", "model": "stub", "tokenBudget": 3000 },
+    "ba": { "provider": "stub", "model": "stub", "tokenBudget": 3000 },
+    "architect": { "provider": "stub", "model": "stub", "tokenBudget": 4000 }
+  }
+}
 ```
 
 Run the Docker smoke test against the running stack:

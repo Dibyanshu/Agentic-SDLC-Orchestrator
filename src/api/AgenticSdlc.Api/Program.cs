@@ -70,8 +70,19 @@ app.MapPost("/workflow/start", async (StartWorkflowRequest request, IProjectStor
         return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
     }
 
-    var response = await agentClient.StartWorkflowAsync(request, cancellationToken);
-    return Results.Ok(response);
+    try
+    {
+        var response = await agentClient.StartWorkflowAsync(request, cancellationToken);
+        return Results.Ok(response);
+    }
+    catch (AgentServiceException exc) when (exc.StatusCode == System.Net.HttpStatusCode.BadRequest)
+    {
+        return Results.BadRequest(new ErrorResponse("workflow_validation_failed", exc.Message));
+    }
+    catch (AgentServiceException exc)
+    {
+        return Results.Problem(exc.Message, statusCode: (int)exc.StatusCode);
+    }
 })
 .WithName("StartWorkflow");
 
@@ -87,8 +98,19 @@ app.MapPost("/workflow/resume", async (ResumeWorkflowRequest request, IProjectSt
         return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
     }
 
-    var response = await agentClient.ResumeWorkflowAsync(request, cancellationToken);
-    return Results.Ok(response);
+    try
+    {
+        var response = await agentClient.ResumeWorkflowAsync(request, cancellationToken);
+        return Results.Ok(response);
+    }
+    catch (AgentServiceException exc) when (exc.StatusCode == System.Net.HttpStatusCode.NotFound)
+    {
+        return Results.NotFound(new ErrorResponse("workflow_not_found", exc.Message));
+    }
+    catch (AgentServiceException exc)
+    {
+        return Results.Problem(exc.Message, statusCode: (int)exc.StatusCode);
+    }
 })
 .WithName("ResumeWorkflow");
 
@@ -218,6 +240,55 @@ app.MapGet("/metrics/workflow/{projectId}", async (string projectId, IProjectSto
         : Results.Ok(response);
 })
 .WithName("GetWorkflowMetrics");
+
+app.MapGet("/llm/providers", async (IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    var response = await agentClient.GetLlmProvidersAsync(cancellationToken);
+    return Results.Ok(response);
+})
+.WithName("GetLlmProviders");
+
+app.MapGet("/projects/{projectId}/llm-settings", async (string projectId, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.GetProjectLlmSettingsAsync(projectId, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("llm_settings_not_found", "LLM settings were not found."))
+        : Results.Ok(response);
+})
+.WithName("GetProjectLlmSettings");
+
+app.MapPut("/projects/{projectId}/llm-settings", async (string projectId, ProjectLlmSettingsUpdateRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    if (request.Agents.Count == 0)
+    {
+        return Results.BadRequest(new ErrorResponse("llm_settings_validation_failed", "At least one agent setting is required."));
+    }
+
+    try
+    {
+        var response = await agentClient.UpdateProjectLlmSettingsAsync(projectId, request, cancellationToken);
+        return Results.Ok(response);
+    }
+    catch (AgentServiceException exc) when (exc.StatusCode == System.Net.HttpStatusCode.BadRequest)
+    {
+        return Results.BadRequest(new ErrorResponse("llm_settings_validation_failed", exc.Message));
+    }
+    catch (AgentServiceException exc)
+    {
+        return Results.Problem(exc.Message, statusCode: (int)exc.StatusCode);
+    }
+})
+.WithName("UpdateProjectLlmSettings");
 
 app.MapPost("/rag/sources", async (RagSourceCreateRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
 {

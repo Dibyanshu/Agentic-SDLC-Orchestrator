@@ -24,6 +24,9 @@ public interface IAgentServiceClient
     Task<WorkflowMetricsResponse?> GetWorkflowMetricsAsync(string projectId, CancellationToken cancellationToken);
     Task<RagSourceResponse> CreateRagSourceAsync(RagSourceCreateRequest request, CancellationToken cancellationToken);
     Task<RagSourcesResponse?> GetRagSourcesAsync(string projectId, CancellationToken cancellationToken);
+    Task<LlmProvidersResponse> GetLlmProvidersAsync(CancellationToken cancellationToken);
+    Task<ProjectLlmSettingsResponse?> GetProjectLlmSettingsAsync(string projectId, CancellationToken cancellationToken);
+    Task<ProjectLlmSettingsResponse> UpdateProjectLlmSettingsAsync(string projectId, ProjectLlmSettingsUpdateRequest request, CancellationToken cancellationToken);
 }
 
 public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceClient
@@ -31,7 +34,12 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
     public async Task<WorkflowResponse> StartWorkflowAsync(StartWorkflowRequest request, CancellationToken cancellationToken)
     {
         var response = await httpClient.PostAsJsonAsync("/workflow/start", request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new AgentServiceException(response.StatusCode, ExtractErrorMessage(message));
+        }
+
         return await response.Content.ReadFromJsonAsync<WorkflowResponse>(cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException("Agent service returned an empty workflow response.");
     }
@@ -39,7 +47,12 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
     public async Task<WorkflowResponse> ResumeWorkflowAsync(ResumeWorkflowRequest request, CancellationToken cancellationToken)
     {
         var response = await httpClient.PostAsJsonAsync("/workflow/resume", request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new AgentServiceException(response.StatusCode, ExtractErrorMessage(message));
+        }
+
         return await response.Content.ReadFromJsonAsync<WorkflowResponse>(cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException("Agent service returned an empty workflow response.");
     }
@@ -197,6 +210,42 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
 
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<RagSourcesResponse>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<LlmProvidersResponse> GetLlmProvidersAsync(CancellationToken cancellationToken)
+    {
+        var response = await httpClient.GetAsync("/llm/providers", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<LlmProvidersResponse>(cancellationToken: cancellationToken)
+            ?? throw new InvalidOperationException("Agent service returned an empty LLM providers response.");
+    }
+
+    public async Task<ProjectLlmSettingsResponse?> GetProjectLlmSettingsAsync(string projectId, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.GetAsync($"/projects/{Escape(projectId)}/llm-settings", cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<ProjectLlmSettingsResponse>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<ProjectLlmSettingsResponse> UpdateProjectLlmSettingsAsync(
+        string projectId,
+        ProjectLlmSettingsUpdateRequest request,
+        CancellationToken cancellationToken)
+    {
+        var response = await httpClient.PutAsJsonAsync($"/projects/{Escape(projectId)}/llm-settings", request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new AgentServiceException(response.StatusCode, ExtractErrorMessage(message));
+        }
+
+        return await response.Content.ReadFromJsonAsync<ProjectLlmSettingsResponse>(cancellationToken: cancellationToken)
+            ?? throw new InvalidOperationException("Agent service returned an empty LLM settings response.");
     }
 
     private static string Escape(string value) => Uri.EscapeDataString(value);

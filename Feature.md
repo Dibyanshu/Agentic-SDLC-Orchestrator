@@ -61,7 +61,13 @@ Last updated: 2026-05-03
   - API: `GET /logs/llm/{projectId}`
   - Agent service: `GET /logs/llm/{project_id}`
   - Stub provider logs prompt, response, token estimates, latency, status, and cache key.
-- Provider-ready LLM client added with opt-in OpenAI mode via `LLM_PROVIDER=openai`.
+- Multi-provider LLM client added with `stub`, OpenAI, Gemini, and Claude adapters.
+- Per-project, per-agent LLM settings implemented:
+  - API: `GET /llm/providers`
+  - API: `GET /projects/{projectId}/llm-settings`
+  - API: `PUT /projects/{projectId}/llm-settings`
+  - UI supports provider, model, and token budget configuration for PM, BA, and Architect.
+  - Provider keys remain in `.env`; UI only shows configured/missing key status.
 - Workflow metrics endpoint implemented:
   - API: `GET /metrics/workflow/{projectId}`
   - Agent service: `GET /metrics/workflow/{project_id}`
@@ -84,10 +90,11 @@ Last updated: 2026-05-03
   - Python unittest coverage for RAG chunking, deterministic embeddings, context limits, and regeneration planning.
   - Docker smoke script in `scripts/smoke-test.ps1` for project creation, TXT RAG upload, workflow execution, HITL approvals, logs, metrics, and checkpoints.
 - Cost-control slice implemented:
-  - Per-node input token budgets are enforced before LLM provider calls.
-  - PM and BA budget: `3000` tokens.
-  - Architect budget: `4000` tokens.
+  - Per-agent input token budgets are enforced before LLM provider calls.
+  - Default PM and BA budget: `3000` tokens.
+  - Default Architect budget: `4000` tokens.
   - MySQL-backed LLM response cache stores successful responses by prompt/context cache key.
+  - Provider, model, and token budget are included in cache keys.
   - Repeated prompt/context pairs return cached responses and log `cache_hit=true`.
   - Workflow metrics include cache hit counts.
 - Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
@@ -100,7 +107,7 @@ Last updated: 2026-05-03
 ### In Progress
 
 - Durable persistence integration for remaining API surfaces such as workflow resume and metrics.
-- Real LLM execution is opt-in but not yet validated as the default path. Agent outputs still use the stub provider unless `LLM_PROVIDER=openai` is set.
+- Real LLM execution is opt-in but not yet validated as the default path. Agent outputs still use the stub provider unless `.env` keys are configured and project LLM settings select a real provider.
 - LLM logging covers PM, BA, and Architect generation. Regeneration uses the same node logging path when nodes are rerun.
 - Max refinement loop enforcement is implemented for HITL edit/regenerate actions.
 

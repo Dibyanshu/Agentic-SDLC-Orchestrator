@@ -1,8 +1,10 @@
 import axios from "axios";
 import type {
   ArtifactType,
+  LlmProviderInfo,
   LlmLog,
   Project,
+  ProjectLlmSettings,
   RagSource,
   Section,
   SectionVersion,
@@ -97,4 +99,24 @@ export async function uploadRagSource(projectId: string, fileName: string, conte
 export async function getRagSources(projectId: string): Promise<RagSource[]> {
   const response = await client.get<{ sources: RagSource[] }>(`/rag/sources/${projectId}`);
   return response.data.sources;
+}
+
+export async function getLlmProviders(): Promise<LlmProviderInfo[]> {
+  const response = await client.get<{ providers: LlmProviderInfo[] }>("/llm/providers");
+  return response.data.providers;
+}
+
+export async function getProjectLlmSettings(projectId: string): Promise<ProjectLlmSettings> {
+  const response = await client.get<ProjectLlmSettings>(`/projects/${projectId}/llm-settings`);
+  return response.data;
+}
+
+export async function updateProjectLlmSettings(
+  projectId: string,
+  settings: ProjectLlmSettings,
+): Promise<ProjectLlmSettings> {
+  const response = await client.put<ProjectLlmSettings>(`/projects/${projectId}/llm-settings`, {
+    agents: settings.agents,
+  });
+  return response.data;
 }

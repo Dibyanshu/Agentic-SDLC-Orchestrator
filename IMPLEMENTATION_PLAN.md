@@ -30,7 +30,7 @@ Completed implementation:
 - Hardcoded dependency resolver and regeneration planner.
 - Checkpoint retrieval endpoint.
 - PM generation LLM logging endpoint.
-- Provider-ready LLM client with default stub mode and opt-in OpenAI mode.
+- Multi-provider LLM client with default stub mode and OpenAI, Gemini, and Claude adapters.
 - Workflow metrics endpoint for tokens, cost, cache hits, latency, LLM calls, and refinement count.
 - `.env` is used for local runtime secrets and is ignored by git.
 - React UI console for project creation, workflow start/resume, section editing/history, HITL actions, agent progress, logs, and metrics.
@@ -38,13 +38,13 @@ Completed implementation:
 - Controlled TXT RAG vertical slice with source metadata in MySQL, chunk storage/retrieval in Chroma, context injection, and `llm_context_chunks` traces.
 - Initial automated tests and Docker smoke script for the current happy path.
 - Cost controls with per-node input token budgets and MySQL-backed LLM response caching.
+- Per-project PM/BA/Architect LLM settings for provider, model, and input token budget.
 
 Still pending:
 
-- Real LLM client execution validated as the default path.
-- OpenAI-mode validation as the default path.
+- Real LLM client execution validated intentionally for OpenAI, Gemini, and Claude.
 - RAG support for PDF, DOCX, screenshots/OCR, delete source, and advanced ranking.
-- OpenAI validation and expanded RAG source handling.
+- Expanded RAG source handling.
 
 ## 1. Target Phase 1 Architecture
 
@@ -316,10 +316,10 @@ Acceptance criteria:
 - Done: A project can generate PRD sections through deterministic PM stub logic.
 - Done: Workflow status reports `paused_for_hitl`.
 - Done: PRD sections are persisted and can be queried.
-- Partial: PM prompt template execution is provider-ready and defaults to deterministic stub mode.
+- Partial: PM prompt template execution is multi-provider ready and defaults to deterministic stub mode.
 - Done: invalid PM JSON/failure attempts are logged and retried up to 2 times after the first attempt.
 - Done: PM LLM log includes prompt, response, token estimates, status, latency, and cache metadata.
-- Pending: validate OpenAI mode with real provider calls.
+- Pending: validate OpenAI, Gemini, and Claude modes with real provider calls.
 
 ## 7. Milestone 6 - HITL Approve/Edit/Regenerate
 
@@ -349,7 +349,7 @@ Acceptance criteria:
 - Done: refinement actions are persisted in `refinement_logs`.
 - Done: max refinement loop enforcement for edit/regenerate actions.
 - Done: regeneration reruns nodes through the same LLM logging path.
-- Pending: validate regeneration through real OpenAI calls.
+- Pending: validate regeneration through real provider calls.
 
 ## 8. Milestone 7 - BA and Architect Agents
 
@@ -384,7 +384,7 @@ Acceptance criteria:
 - Done: Full workflow can run from project input to PRD, BA, and Architecture artifacts.
 - Done: Workflow pauses after each stage.
 - Done: Approving all stages marks workflow as `completed`.
-- Partial: BA and Architect prompt templates are provider-ready and default to deterministic stub mode.
+- Partial: BA and Architect prompt templates are multi-provider ready and default to deterministic stub mode.
 - Pending: stricter structured output validation.
 
 ## 9. Milestone 8 - Section-wise Regeneration
@@ -462,7 +462,7 @@ Goal: make usage measurable and bounded.
 
 Tasks:
 
-1. Done: Enforce token budgets:
+1. Done: Enforce configurable input token budgets:
    - PM: `3000`
    - BA: `3000`
    - Architect: `4000`
@@ -587,13 +587,13 @@ Deliverable: complete PM LLM slice with mandatory LLM logging and controlled ret
 Day-by-day plan:
 
 1. Done: implement `llm_logs` write service in Python and expose API log retrieval through `.NET`.
-2. Done: implement provider-ready LLM client using `OPENAI_API_KEY` from `.env`, with deterministic stub default.
+2. Done: implement multi-provider LLM client using provider keys from `.env`, with deterministic stub default.
 3. Done: implement PM prompt template, JSON parsing, schema validation, and retry up to 2 times.
 4. Done: wire PM node to LLM client and store LLM logs for success and failure.
 5. Done: validate `POST /projects -> POST /workflow/start -> GET /sections -> GET /logs/llm` in Docker using stub mode.
-6. Pending: validate OpenAI mode intentionally with `LLM_PROVIDER=openai`.
+6. Pending: validate OpenAI, Gemini, and Claude modes intentionally with real provider keys.
 7. Done: extend the same LLM logging pattern to BA, Architect, and regeneration.
-8. Pending: validate OpenAI mode intentionally with `LLM_PROVIDER=openai`.
+8. Pending: validate regeneration intentionally with real provider keys.
 
 Next sprint demo script:
 

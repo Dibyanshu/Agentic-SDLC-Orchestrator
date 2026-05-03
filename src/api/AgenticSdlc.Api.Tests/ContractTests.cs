@@ -73,4 +73,40 @@ public sealed class ContractTests
         Assert.Single(metrics.LatencyByNode);
         Assert.Equal("pm_node", metrics.LatencyByNode[0].NodeName);
     }
+
+    [Fact]
+    public void LlmSettingsUpdateRequest_DeserializesAgentMap()
+    {
+        const string payload = """
+        {
+          "agents": {
+            "pm": { "provider": "stub", "model": "stub", "tokenBudget": 3000 },
+            "ba": { "provider": "gemini", "model": "gemini-2.5-flash", "tokenBudget": 3000 },
+            "architect": { "provider": "claude", "model": "claude-3-5-sonnet-20241022", "tokenBudget": 4000 }
+          }
+        }
+        """;
+
+        var request = JsonSerializer.Deserialize<ProjectLlmSettingsUpdateRequest>(payload, JsonOptions);
+
+        Assert.NotNull(request);
+        Assert.Equal("stub", request.Agents["pm"].Provider);
+        Assert.Equal("gemini-2.5-flash", request.Agents["ba"].Model);
+        Assert.Equal(4000, request.Agents["architect"].TokenBudget);
+    }
+
+    [Fact]
+    public void LlmProvidersResponse_SerializesKeyStatus()
+    {
+        var response = new LlmProvidersResponse(
+        [
+            new LlmProviderResponse("stub", "stub", true),
+            new LlmProviderResponse("gemini", "gemini-2.5-flash", false),
+        ]);
+
+        var json = JsonSerializer.Serialize(response, JsonOptions);
+
+        Assert.Contains("apiKeyConfigured", json);
+        Assert.Contains("defaultModel", json);
+    }
 }

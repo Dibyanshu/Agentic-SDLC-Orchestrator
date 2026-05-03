@@ -185,3 +185,38 @@ class RagSourcesResponse(BaseModel):
     sources: list[RagSourceResponse]
 
     model_config = {"populate_by_name": True}
+
+
+class AgentLlmSettingsResponse(BaseModel):
+    provider: str
+    model: str
+    token_budget: int = Field(alias="tokenBudget")
+
+    model_config = {"populate_by_name": True}
+
+
+class ProjectLlmSettingsResponse(BaseModel):
+    project_id: str = Field(alias="projectId")
+    agents: dict[str, AgentLlmSettingsResponse]
+
+    model_config = {"populate_by_name": True}
+
+
+class ProjectLlmSettingsUpdateRequest(BaseModel):
+    agents: dict[str, AgentLlmSettingsResponse]
+
+    model_config = {"populate_by_name": True}
+
+
+class LlmProviderResponse(BaseModel):
+    provider: str
+    default_model: str = Field(alias="defaultModel")
+    api_key_configured: bool = Field(alias="apiKeyConfigured")
+
+    model_config = {"populate_by_name": True}
+
+
+class LlmProvidersResponse(BaseModel):
+    providers: list[LlmProviderResponse]
+
+    model_config = {"populate_by_name": True}
