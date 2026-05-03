@@ -94,3 +94,20 @@ public sealed record LlmLogResponse(
 public sealed record LlmLogsResponse(
     string ProjectId,
     IReadOnlyList<LlmLogResponse> Logs);
+
+public sealed record NodeLatencyMetric(
+    string NodeName,
+    int CallCount,
+    int TotalLatencyMs,
+    double AverageLatencyMs);
+
+public sealed record WorkflowMetricsResponse(
+    string ProjectId,
+    int TotalInputTokens,
+    int TotalOutputTokens,
+    int TotalTokens,
+    string EstimatedCost,
+    int CacheHitCount,
+    int LlmCallCount,
+    int RefinementCount,
+    IReadOnlyList<NodeLatencyMetric> LatencyByNode);

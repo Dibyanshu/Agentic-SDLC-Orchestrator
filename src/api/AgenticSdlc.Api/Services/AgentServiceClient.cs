@@ -21,6 +21,7 @@ public interface IAgentServiceClient
     Task<SectionVersionsResponse?> GetSectionVersionsAsync(string projectId, string artifactType, string sectionName, CancellationToken cancellationToken);
     Task<CheckpointsResponse?> GetCheckpointsAsync(string projectId, CancellationToken cancellationToken);
     Task<LlmLogsResponse?> GetLlmLogsAsync(string projectId, CancellationToken cancellationToken);
+    Task<WorkflowMetricsResponse?> GetWorkflowMetricsAsync(string projectId, CancellationToken cancellationToken);
 }
 
 public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceClient
@@ -157,6 +158,18 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
 
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<LlmLogsResponse>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<WorkflowMetricsResponse?> GetWorkflowMetricsAsync(string projectId, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.GetAsync($"/metrics/workflow/{Escape(projectId)}", cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<WorkflowMetricsResponse>(cancellationToken: cancellationToken);
     }
 
     private static string Escape(string value) => Uri.EscapeDataString(value);

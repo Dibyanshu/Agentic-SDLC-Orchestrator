@@ -4,6 +4,7 @@ from app.graph.nodes.hitl_node import hitl_node
 from app.graph.nodes.manager_node import manager_node
 from app.graph.nodes.pm_node import pm_node
 from app.persistence.checkpoint_store import MySqlCheckpointStore
+from app.persistence.metrics_store import MetricsStore
 from app.persistence.section_store import SectionStore
 from app.logging.llm_logger import LlmLogger
 from app.schemas.contracts import (
@@ -19,6 +20,8 @@ from app.schemas.contracts import (
     WorkflowResponse,
     LlmLogResponse,
     LlmLogsResponse,
+    NodeLatencyMetric,
+    WorkflowMetricsResponse,
 )
 from app.schemas.state import AgentState
 
@@ -26,6 +29,7 @@ _STATE_STORE: dict[str, AgentState] = {}
 _CHECKPOINT_STORE = MySqlCheckpointStore()
 _SECTION_STORE = SectionStore()
 _LLM_LOGGER = LlmLogger()
+_METRICS_STORE = MetricsStore()
 MAX_REFINEMENT_LOOPS_PER_STAGE = 2
 
 
@@ -316,6 +320,29 @@ def get_llm_logs(project_id: str) -> LlmLogsResponse:
         for row in rows
     ]
     return LlmLogsResponse(project_id=project_id, logs=logs)
+
+
+def get_workflow_metrics(project_id: str) -> WorkflowMetricsResponse:
+    metrics = _METRICS_STORE.get_workflow_metrics(project_id)
+    return WorkflowMetricsResponse(
+        project_id=metrics["project_id"],
+        total_input_tokens=metrics["total_input_tokens"],
+        total_output_tokens=metrics["total_output_tokens"],
+        total_tokens=metrics["total_tokens"],
+        estimated_cost=metrics["estimated_cost"],
+        cache_hit_count=metrics["cache_hit_count"],
+        llm_call_count=metrics["llm_call_count"],
+        refinement_count=metrics["refinement_count"],
+        latency_by_node=[
+            NodeLatencyMetric(
+                node_name=row["node_name"],
+                call_count=row["call_count"],
+                total_latency_ms=row["total_latency_ms"],
+                average_latency_ms=row["average_latency_ms"],
+            )
+            for row in metrics["latency_by_node"]
+        ],
+    )
 
 
 def _apply_section_edit(state: AgentState, request: HitlActionRequest) -> None:

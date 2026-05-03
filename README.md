@@ -272,6 +272,12 @@ Get LLM logs:
 GET http://localhost:8080/logs/llm/<project id>
 ```
 
+Get workflow metrics:
+
+```http
+GET http://localhost:8080/metrics/workflow/<project id>
+```
+
 ## Verified Commands
 
 The following commands were verified successfully:

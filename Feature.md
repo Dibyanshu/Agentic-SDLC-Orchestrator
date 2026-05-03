@@ -62,6 +62,10 @@ Last updated: 2026-05-03
   - Agent service: `GET /logs/llm/{project_id}`
   - Stub provider logs prompt, response, token estimates, latency, status, and cache key.
 - Provider-ready LLM client added with opt-in OpenAI mode via `LLM_PROVIDER=openai`.
+- Workflow metrics endpoint implemented:
+  - API: `GET /metrics/workflow/{projectId}`
+  - Agent service: `GET /metrics/workflow/{project_id}`
+  - Includes token totals, estimated cost, per-node latency, cache hits, LLM call count, and refinement count.
 - Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
 - Agent service section writes now persist generated and edited sections to MySQL.
 - Section updates now create `section_versions` rows on create, regeneration, and edit paths.

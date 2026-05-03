@@ -6,6 +6,7 @@ from app.graph.runner import (
     get_section,
     get_section_versions,
     get_sections,
+    get_workflow_metrics,
     get_workflow_state,
     handle_hitl_action,
     resume_workflow,
@@ -24,6 +25,7 @@ from app.schemas.contracts import (
     ResumeWorkflowRequest,
     StartWorkflowRequest,
     UpdateSectionRequest,
+    WorkflowMetricsResponse,
     WorkflowResponse,
 )
 
@@ -133,6 +135,11 @@ def project_checkpoints(project_id: str) -> CheckpointsResponse:
 @router.get("/logs/llm/{project_id}", response_model=LlmLogsResponse)
 def project_llm_logs(project_id: str) -> LlmLogsResponse:
     return get_llm_logs(project_id)
+
+
+@router.get("/metrics/workflow/{project_id}", response_model=WorkflowMetricsResponse)
+def workflow_metrics(project_id: str) -> WorkflowMetricsResponse:
+    return get_workflow_metrics(project_id)
 
 
 @router.post("/workflow/hitl", response_model=WorkflowResponse)

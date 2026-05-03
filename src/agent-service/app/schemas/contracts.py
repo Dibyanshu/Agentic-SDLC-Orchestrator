@@ -134,3 +134,26 @@ class LlmLogsResponse(BaseModel):
     logs: list[LlmLogResponse]
 
     model_config = {"populate_by_name": True}
+
+
+class NodeLatencyMetric(BaseModel):
+    node_name: str = Field(alias="nodeName")
+    call_count: int = Field(alias="callCount")
+    total_latency_ms: int = Field(alias="totalLatencyMs")
+    average_latency_ms: float = Field(alias="averageLatencyMs")
+
+    model_config = {"populate_by_name": True}
+
+
+class WorkflowMetricsResponse(BaseModel):
+    project_id: str = Field(alias="projectId")
+    total_input_tokens: int = Field(alias="totalInputTokens")
+    total_output_tokens: int = Field(alias="totalOutputTokens")
+    total_tokens: int = Field(alias="totalTokens")
+    estimated_cost: str = Field(alias="estimatedCost")
+    cache_hit_count: int = Field(alias="cacheHitCount")
+    llm_call_count: int = Field(alias="llmCallCount")
+    refinement_count: int = Field(alias="refinementCount")
+    latency_by_node: list[NodeLatencyMetric] = Field(alias="latencyByNode")
+
+    model_config = {"populate_by_name": True}

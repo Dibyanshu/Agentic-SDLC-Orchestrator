@@ -30,6 +30,7 @@ Completed implementation:
 - Checkpoint retrieval endpoint.
 - PM generation LLM logging endpoint.
 - Provider-ready LLM client with default stub mode and opt-in OpenAI mode.
+- Workflow metrics endpoint for tokens, cost, cache hits, latency, LLM calls, and refinement count.
 - `.env` is used for local runtime secrets and is ignored by git.
 
 Still pending:
@@ -39,7 +40,7 @@ Still pending:
 - REACT UI creation and integration [Feature-UI.md]
 - Docker adjustments for the new REACT UI
 - Controlled RAG ingestion and retrieval.
-- Token budgets, response caching, and metrics.
+- Token budgets and response caching.
 
 ## 1. Target Phase 1 Architecture
 
@@ -469,11 +470,17 @@ Metrics:
 - cache hit count
 - refinement count
 
+Status:
+
+- Done: `GET /metrics/workflow/{projectId}` exposes token totals, estimated cost, latency per node, cache hits, LLM call count, and refinement count.
+- Pending: token budget enforcement.
+- Pending: response caching.
+
 Acceptance criteria:
 
-- Token budget violations fail before LLM call.
-- Repeated identical prompt/context returns cached response.
-- Project-level metrics can be queried.
+- Pending: Token budget violations fail before LLM call.
+- Pending: Repeated identical prompt/context returns cached response.
+- Done: Project-level metrics can be queried.
 
 ## 12. Milestone 11 - Hardening and Developer Experience
 
@@ -526,7 +533,7 @@ Acceptance criteria:
 - Chroma retrieval
 - Token budget enforcement
 - Response caching
-- Metrics endpoint
+- Done: Metrics endpoint
 - End-to-end smoke tests
 
 ### P2 - Later

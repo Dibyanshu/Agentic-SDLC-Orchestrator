@@ -193,6 +193,20 @@ app.MapGet("/logs/llm/{projectId}", async (string projectId, IProjectStore store
 })
 .WithName("GetLlmLogs");
 
+app.MapGet("/metrics/workflow/{projectId}", async (string projectId, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
+{
+    if (store.Get(projectId) is null)
+    {
+        return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
+    }
+
+    var response = await agentClient.GetWorkflowMetricsAsync(projectId, cancellationToken);
+    return response is null
+        ? Results.NotFound(new ErrorResponse("workflow_metrics_not_found", "Workflow metrics were not found."))
+        : Results.Ok(response);
+})
+.WithName("GetWorkflowMetrics");
+
 app.MapPost("/hitl/action", async (HitlActionRequest request, IProjectStore store, IAgentServiceClient agentClient, CancellationToken cancellationToken) =>
 {
     var allowedActions = new[] { "approve", "edit", "regenerate" };
