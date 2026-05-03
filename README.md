@@ -264,6 +264,8 @@ Content-Type: application/json
 
 Approve three times to walk the current stub workflow from PRD to BA to Architecture to `completed`.
 
+HITL edit/regenerate actions are limited to 2 refinement loops per artifact stage, for example `PRD`, `BA`, or `ARCH`.
+
 Get LLM logs:
 
 ```http

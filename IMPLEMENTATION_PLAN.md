@@ -36,7 +36,6 @@ Still pending:
 
 - Real LLM client execution validated as the default path.
 - OpenAI-mode validation as the default path.
-- Max refinement loop enforcement.
 - REACT UI creation and integration [Feature-UI.md]
 - Docker adjustments for the new REACT UI
 - Controlled RAG ingestion and retrieval.
@@ -337,9 +336,9 @@ Acceptance criteria:
 - Done: Editing `PRD.Features` creates a new version.
 - Done: Regeneration creates a plan and reruns the selected deterministic node sequence.
 - Done: refinement actions are persisted in `refinement_logs`.
+- Done: max refinement loop enforcement for edit/regenerate actions.
 - Done: regeneration reruns nodes through the same LLM logging path.
 - Pending: validate regeneration through real OpenAI calls.
-- Pending: max refinement loop enforcement.
 
 ## 8. Milestone 7 - BA and Architect Agents
 
@@ -516,7 +515,7 @@ Acceptance criteria:
 - Done: Workflow start/resume.
 - Partial: LangGraph skeleton. Deterministic runner exists; compiled LangGraph graph is pending if required.
 - Partial: PM, BA, Architect nodes. Deterministic stubs exist; real LLM execution is pending.
-- Partial: HITL approve/edit/regenerate. Main flow exists; loop limit is pending.
+- Done: HITL approve/edit/regenerate with loop limit enforcement.
 - Done: LLM logging for PM, BA, Architect, and node-based regeneration.
 - Done: Checkpointing
 - Partial: Hardcoded dependency-based regeneration. Planner exists; exact dependent-section write behavior needs refinement.

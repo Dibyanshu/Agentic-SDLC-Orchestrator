@@ -1,7 +1,13 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using AgenticSdlc.Api.Contracts;
 
 namespace AgenticSdlc.Api.Services;
+
+public sealed class AgentServiceException(System.Net.HttpStatusCode statusCode, string message) : Exception(message)
+{
+    public System.Net.HttpStatusCode StatusCode { get; } = statusCode;
+}
 
 public interface IAgentServiceClient
 {
@@ -38,6 +44,12 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
     public async Task<WorkflowResponse> SendHitlActionAsync(HitlActionRequest request, CancellationToken cancellationToken)
     {
         var response = await httpClient.PostAsJsonAsync("/workflow/hitl", request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var message = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new AgentServiceException(response.StatusCode, ExtractErrorMessage(message));
+        }
+
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<WorkflowResponse>(cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException("Agent service returned an empty workflow response.");
@@ -148,4 +160,27 @@ public sealed class AgentServiceClient(HttpClient httpClient) : IAgentServiceCli
     }
 
     private static string Escape(string value) => Uri.EscapeDataString(value);
+
+    private static string ExtractErrorMessage(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return "Agent service request failed.";
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            if (document.RootElement.TryGetProperty("detail", out var detail))
+            {
+                return detail.GetString() ?? content;
+            }
+        }
+        catch (JsonException)
+        {
+            return content;
+        }
+
+        return content;
+    }
 }

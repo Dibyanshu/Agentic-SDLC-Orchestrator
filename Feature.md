@@ -31,6 +31,7 @@ Last updated: 2026-05-03
 - Workflow start implemented through API and agent service: `POST /workflow/start`.
 - Workflow resume implemented through API and agent service: `POST /workflow/resume`.
 - HITL action endpoint implemented through API and agent service: `POST /hitl/action`.
+- HITL refinement loop limit implemented for edit/regenerate actions: max `2` per artifact stage.
 - Deterministic stub workflow implemented:
   - PRD generation
   - HITL pause
@@ -73,6 +74,7 @@ Last updated: 2026-05-03
 - Durable persistence integration for remaining API surfaces such as workflow resume and metrics.
 - Real LLM execution is opt-in but not yet validated as the default path. Agent outputs still use the stub provider unless `LLM_PROVIDER=openai` is set.
 - LLM logging covers PM, BA, and Architect generation. Regeneration uses the same node logging path when nodes are rerun.
+- Max refinement loop enforcement is implemented for HITL edit/regenerate actions.
 
 ### Not Started
 

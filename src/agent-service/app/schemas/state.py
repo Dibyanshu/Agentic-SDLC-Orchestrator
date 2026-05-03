@@ -14,5 +14,5 @@ class AgentState(TypedDict, total=False):
     context_cache: list[dict[str, Any]]
     execution_history: list[str]
     execution_plan: list[str]
+    refinement_counts: dict[str, int]
     status: str
-

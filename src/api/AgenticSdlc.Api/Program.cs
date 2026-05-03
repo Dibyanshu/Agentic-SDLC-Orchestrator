@@ -208,13 +208,37 @@ app.MapPost("/hitl/action", async (HitlActionRequest request, IProjectStore stor
         return Results.BadRequest(new ErrorResponse("hitl_mode_invalid", "Mode must be single or cascade."));
     }
 
+    if (request.Action.Equals("edit", StringComparison.OrdinalIgnoreCase))
+    {
+        if (string.IsNullOrWhiteSpace(request.Section) || request.Content is null)
+        {
+            return Results.BadRequest(new ErrorResponse("hitl_edit_invalid", "Section and content are required for edit actions."));
+        }
+    }
+
+    if (request.Action.Equals("regenerate", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(request.Section))
+    {
+        return Results.BadRequest(new ErrorResponse("hitl_regenerate_invalid", "Section is required for regenerate actions."));
+    }
+
     if (store.Get(request.ProjectId) is null)
     {
         return Results.NotFound(new ErrorResponse("project_not_found", "Project was not found."));
     }
 
-    var response = await agentClient.SendHitlActionAsync(request, cancellationToken);
-    return Results.Ok(response);
+    try
+    {
+        var response = await agentClient.SendHitlActionAsync(request, cancellationToken);
+        return Results.Ok(response);
+    }
+    catch (AgentServiceException exc) when (exc.StatusCode == System.Net.HttpStatusCode.BadRequest)
+    {
+        return Results.BadRequest(new ErrorResponse("hitl_validation_failed", exc.Message));
+    }
+    catch (AgentServiceException exc) when (exc.StatusCode == System.Net.HttpStatusCode.NotFound)
+    {
+        return Results.NotFound(new ErrorResponse("workflow_not_found", exc.Message));
+    }
 })
 .WithName("HitlAction");
 

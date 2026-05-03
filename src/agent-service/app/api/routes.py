@@ -11,6 +11,7 @@ from app.graph.runner import (
     resume_workflow,
     start_workflow,
     update_section,
+    WorkflowValidationError,
 )
 from app.schemas.contracts import (
     CheckpointsResponse,
@@ -141,5 +142,7 @@ def workflow_hitl(request: HitlActionRequest) -> WorkflowResponse:
 
     try:
         return handle_hitl_action(request)
+    except WorkflowValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

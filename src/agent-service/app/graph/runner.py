@@ -26,6 +26,11 @@ _STATE_STORE: dict[str, AgentState] = {}
 _CHECKPOINT_STORE = MySqlCheckpointStore()
 _SECTION_STORE = SectionStore()
 _LLM_LOGGER = LlmLogger()
+MAX_REFINEMENT_LOOPS_PER_STAGE = 2
+
+
+class WorkflowValidationError(ValueError):
+    pass
 
 
 def start_workflow(request: StartWorkflowRequest) -> WorkflowResponse:
@@ -39,6 +44,7 @@ def start_workflow(request: StartWorkflowRequest) -> WorkflowResponse:
         "context_cache": [],
         "execution_history": [],
         "execution_plan": [],
+        "refinement_counts": {},
         "status": "running",
     }
 
@@ -78,6 +84,8 @@ def handle_hitl_action(request: HitlActionRequest) -> WorkflowResponse:
         raise ValueError("workflow state was not found")
 
     if request.action == "edit":
+        _validate_hitl_refinement_request(request)
+        _consume_refinement_loop(state, request.section or "")
         _apply_section_edit(state, request)
         _SECTION_STORE.save_refinement_log(
             request.project_id,
@@ -95,9 +103,11 @@ def handle_hitl_action(request: HitlActionRequest) -> WorkflowResponse:
                     artifact_type,
                     {section_name: artifact[section_name]},
                     "hitl_edit",
-                )
+        )
         _save_checkpoint(state)
     elif request.action == "regenerate":
+        _validate_hitl_refinement_request(request)
+        _consume_refinement_loop(state, request.section or "")
         state["updated_section"] = request.section
         state["regeneration_mode"] = request.mode or "single"
         _SECTION_STORE.save_refinement_log(
@@ -321,6 +331,32 @@ def _apply_section_edit(state: AgentState, request: HitlActionRequest) -> None:
     artifact[section_name] = request.content
     state["updated_section"] = request.section
     state.setdefault("execution_history", []).append(f"edit:{request.section}")
+
+
+def _validate_hitl_refinement_request(request: HitlActionRequest) -> None:
+    if not request.section or "." not in request.section:
+        raise WorkflowValidationError("section is required as Artifact.Section for edit and regenerate actions")
+
+    if request.action == "edit" and request.content is None:
+        raise WorkflowValidationError("content is required for edit actions")
+
+
+def _consume_refinement_loop(state: AgentState, qualified_section: str) -> None:
+    stage = _stage_from_section(qualified_section)
+    counts = state.setdefault("refinement_counts", {})
+    current_count = int(counts.get(stage, 0))
+    if current_count >= MAX_REFINEMENT_LOOPS_PER_STAGE:
+        raise WorkflowValidationError(
+            f"Maximum refinement loops exceeded for {stage}. "
+            f"Allowed: {MAX_REFINEMENT_LOOPS_PER_STAGE}."
+        )
+
+    counts[stage] = current_count + 1
+
+
+def _stage_from_section(qualified_section: str) -> str:
+    artifact_type, _, _ = qualified_section.partition(".")
+    return artifact_type or "UNKNOWN"
 
 
 def _advance_after_approval(state: AgentState) -> AgentState:
