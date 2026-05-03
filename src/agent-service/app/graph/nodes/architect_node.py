@@ -7,7 +7,10 @@ def architect_node(state: AgentState) -> AgentState:
     state.setdefault("execution_history", []).append("architect_node")
 
     artifacts = state.setdefault("artifacts", {})
-    artifacts["ARCH"] = generate_architecture(artifacts.get("BA", {}))
+    artifacts["ARCH"] = generate_architecture(
+        artifacts.get("BA", {}),
+        state["project_id"],
+        artifacts,
+    )
     state["status"] = "running"
     return state
-

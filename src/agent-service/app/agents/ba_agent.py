@@ -1,8 +1,24 @@
-def generate_ba(prd: dict[str, str]) -> dict[str, str]:
-    features = prd.get("Features", "the approved product features")
+from typing import Any
 
-    return {
-        "UserStories": f"As a product owner, I want {features} so that early SDLC artifacts are generated consistently.",
-        "AcceptanceCriteria": "Given a project input, when the workflow runs, then PRD sections are generated and paused for human approval.",
-    }
+from app.agents.agent_llm_runner import run_json_agent
+from app.context.context_builder import build_context
+from app.llm.prompt_templates import BA_SYSTEM_PROMPT, build_ba_user_prompt
 
+REQUIRED_BA_KEYS = {"UserStories", "AcceptanceCriteria"}
+
+
+def generate_ba(
+    prd: dict[str, str],
+    project_id: str,
+    artifacts: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, str]:
+    context = build_context("BA", artifacts or {"PRD": prd})
+    return run_json_agent(
+        project_id=project_id,
+        node_name="ba_node",
+        agent_name="BA",
+        system_prompt=BA_SYSTEM_PROMPT,
+        user_prompt=build_ba_user_prompt(prd),
+        context=context,
+        required_keys=REQUIRED_BA_KEYS,
+    )

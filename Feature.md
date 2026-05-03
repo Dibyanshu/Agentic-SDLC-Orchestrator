@@ -55,7 +55,7 @@ Last updated: 2026-05-03
   - API: `PUT /sections/{projectId}/{artifactType}/{sectionName}`
   - API: `GET /sections/{projectId}/{artifactType}/{sectionName}/versions`
   - Agent service exposes matching persisted section endpoints.
-- PM node LLM interaction logging implemented:
+- PM, BA, and Architect node LLM interaction logging implemented:
   - API: `GET /logs/llm/{projectId}`
   - Agent service: `GET /logs/llm/{project_id}`
   - Stub provider logs prompt, response, token estimates, latency, status, and cache key.
@@ -71,7 +71,7 @@ Last updated: 2026-05-03
 
 - Durable persistence integration for remaining API surfaces such as workflow resume and metrics.
 - Real LLM execution is opt-in but not yet validated as the default path. Agent outputs still use the stub provider unless `LLM_PROVIDER=openai` is set.
-- LLM logging currently covers PM generation. BA, Architect, and regeneration LLM logging are pending real LLM integration for those nodes.
+- LLM logging covers PM, BA, and Architect generation. Regeneration uses the same node logging path when nodes are rerun.
 
 ### Not Started
 

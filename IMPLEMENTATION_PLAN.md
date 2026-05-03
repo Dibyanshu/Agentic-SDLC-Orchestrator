@@ -35,7 +35,7 @@ Completed implementation:
 Still pending:
 
 - Real LLM client execution validated as the default path.
-- LLM logging for BA, Architect, and regeneration calls.
+- OpenAI-mode validation as the default path.
 - Workflow resume endpoint.
 - Max refinement loop enforcement.
 - API/Python automated tests.
@@ -162,8 +162,8 @@ Acceptance criteria:
 - Done: `GET /projects/{id}` returns the created project.
 - Done: Section updates create a new `section_versions` row.
 - Done: Checkpoints and refinement logs are persisted.
-- Partial: LLM logging writes exist for PM generation.
-- Pending: LLM logging for BA, Architect, regeneration calls, and LLM context chunk writes.
+- Done: LLM logging writes exist for PM, BA, Architect, and node-based regeneration calls.
+- Pending: LLM context chunk writes.
 
 ## 4. Milestone 3 - .NET Control Plane API
 
@@ -337,7 +337,8 @@ Acceptance criteria:
 - Done: Editing `PRD.Features` creates a new version.
 - Done: Regeneration creates a plan and reruns the selected deterministic node sequence.
 - Done: refinement actions are persisted in `refinement_logs`.
-- Pending: regeneration through real LLM calls and LLM logs.
+- Done: regeneration reruns nodes through the same LLM logging path.
+- Pending: validate regeneration through real OpenAI calls.
 - Pending: max refinement loop enforcement.
 
 ## 8. Milestone 7 - BA and Architect Agents
@@ -373,7 +374,7 @@ Acceptance criteria:
 - Done: Full workflow can run from project input to PRD, BA, and Architecture artifacts.
 - Done: Workflow pauses after each stage.
 - Done: Approving all stages marks workflow as `completed`.
-- Pending: real BA and Architect prompt templates using LLM output.
+- Partial: BA and Architect prompt templates are provider-ready and default to deterministic stub mode.
 - Pending: stricter structured output validation.
 
 ## 9. Milestone 8 - Section-wise Regeneration
@@ -516,7 +517,7 @@ Acceptance criteria:
 - Partial: LangGraph skeleton. Deterministic runner exists; compiled LangGraph graph is pending if required.
 - Partial: PM, BA, Architect nodes. Deterministic stubs exist; real LLM execution is pending.
 - Partial: HITL approve/edit/regenerate. Main flow exists; loop limit is pending.
-- Partial: LLM logging. PM generation logging exists; BA, Architect, and regeneration logging are pending.
+- Done: LLM logging for PM, BA, Architect, and node-based regeneration.
 - Done: Checkpointing
 - Partial: Hardcoded dependency-based regeneration. Planner exists; exact dependent-section write behavior needs refinement.
 
@@ -569,7 +570,8 @@ Day-by-day plan:
 4. Done: wire PM node to LLM client and store LLM logs for success and failure.
 5. Done: validate `POST /projects -> POST /workflow/start -> GET /sections -> GET /logs/llm` in Docker using stub mode.
 6. Pending: validate OpenAI mode intentionally with `LLM_PROVIDER=openai`.
-7. Pending: extend the same LLM logging pattern to BA, Architect, and regeneration.
+7. Done: extend the same LLM logging pattern to BA, Architect, and regeneration.
+8. Pending: validate OpenAI mode intentionally with `LLM_PROVIDER=openai`.
 
 Next sprint demo script:
 

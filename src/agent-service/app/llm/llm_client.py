@@ -33,22 +33,11 @@ class LlmClient:
         if self._provider == "openai":
             return self._complete_openai(system_prompt, user_prompt, context)
 
-        return self._complete_stub(user_prompt)
+        return self._complete_stub(user_prompt, system_prompt)
 
-    def _complete_stub(self, user_prompt: str) -> LlmResult:
+    def _complete_stub(self, user_prompt: str, system_prompt: str) -> LlmResult:
         start = time.perf_counter()
-        goal = _extract_product_request(user_prompt)
-        payload = {
-            "Overview": f"Build an Agentic SDLC workflow for: {goal}",
-            "Features": (
-                "Project initialization, deterministic workflow execution, "
-                "HITL checkpoints, section management, and audit logging."
-            ),
-            "UserFlow": (
-                "User creates a project, starts workflow generation, reviews PRD "
-                "output, and approves or refines sections."
-            ),
-        }
+        payload = _stub_payload(system_prompt, user_prompt)
         text = json.dumps(payload)
         return LlmResult(
             text=text,
@@ -117,6 +106,53 @@ def _extract_product_request(user_prompt: str) -> str:
         return user_prompt.strip() or "Define the requested product capability."
 
     return user_prompt.split(marker, 1)[1].strip()
+
+
+def _stub_payload(system_prompt: str, user_prompt: str) -> dict[str, str]:
+    if "UserStories" in system_prompt:
+        return {
+            "UserStories": (
+                "As a product owner, I want approved PRD features converted into "
+                "clear implementation-ready stories so that delivery teams can plan work."
+            ),
+            "AcceptanceCriteria": (
+                "Given approved PRD sections, when BA generation runs, then user stories "
+                "and acceptance criteria are produced and paused for human approval."
+            ),
+        }
+
+    if "DBSchema" in system_prompt:
+        return {
+            "APIs": (
+                "Expose project, workflow, section, HITL, logs, and checkpoint APIs "
+                "for the orchestrator control plane."
+            ),
+            "DBSchema": (
+                "Use projects, artifacts, sections, section_versions, checkpoints, "
+                "refinement_logs, llm_logs, and llm_context_chunks tables."
+            ),
+            "HLD": (
+                "Use .NET API as the control plane and Python FastAPI agent service "
+                "as the orchestration engine."
+            ),
+            "LLD": (
+                "Keep nodes, agents, context building, LLM execution, persistence, "
+                "and regeneration planning in separate modules."
+            ),
+        }
+
+    goal = _extract_product_request(user_prompt)
+    return {
+        "Overview": f"Build an Agentic SDLC workflow for: {goal}",
+        "Features": (
+            "Project initialization, deterministic workflow execution, "
+            "HITL checkpoints, section management, and audit logging."
+        ),
+        "UserFlow": (
+            "User creates a project, starts workflow generation, reviews PRD "
+            "output, and approves or refines sections."
+        ),
+    }
 
 
 def _estimate_tokens(text: str) -> int:

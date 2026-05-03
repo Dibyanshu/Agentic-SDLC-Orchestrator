@@ -7,7 +7,10 @@ def ba_node(state: AgentState) -> AgentState:
     state.setdefault("execution_history", []).append("ba_node")
 
     artifacts = state.setdefault("artifacts", {})
-    artifacts["BA"] = generate_ba(artifacts.get("PRD", {}))
+    artifacts["BA"] = generate_ba(
+        artifacts.get("PRD", {}),
+        state["project_id"],
+        artifacts,
+    )
     state["status"] = "running"
     return state
-
