@@ -66,6 +66,11 @@ Last updated: 2026-05-03
   - API: `GET /metrics/workflow/{projectId}`
   - Agent service: `GET /metrics/workflow/{project_id}`
   - Includes token totals, estimated cost, per-node latency, cache hits, LLM call count, and refinement count.
+- React/Vite UI scaffold implemented:
+  - Three-panel workflow console
+  - Project creation and workflow start/resume
+  - Agents panel, section tabs/editor/history, HITL action panel, logs, and metrics
+  - Docker Compose `ui` service
 - Agent service checkpoint writes now persist workflow state to MySQL after node transitions.
 - Agent service section writes now persist generated and edited sections to MySQL.
 - Section updates now create `section_versions` rows on create, regeneration, and edit paths.
@@ -87,7 +92,6 @@ Last updated: 2026-05-03
 - Response caching.
 - Workflow resume from persisted checkpoint.
 - API integration tests and Python tests.
-- Frontend UI.
 
 ---
 

@@ -16,6 +16,7 @@ The first implementation slice has been scaffolded:
 
 - `.NET 8` API control plane in `src/api/AgenticSdlc.Api`
 - Python FastAPI agent service in `src/agent-service`
+- React/Vite workflow console in `src/ui/orchestrator-ui`
 - MySQL migration scripts in `infra/mysql/migrations`
 - Docker Compose runtime in `infra/docker-compose.yml`
 
@@ -97,6 +98,7 @@ docker compose --env-file .env -f infra/docker-compose.yml down -v
 
 Docker ports:
 
+- UI: `http://localhost:5173`
 - API: `http://localhost:8080`
 - Agent service: `http://localhost:8000`
 - Chroma: `http://localhost:8001`
@@ -156,6 +158,14 @@ $env:AGENT_SERVICE_URL = 'http://localhost:8000'
 dotnet run --project src/api/AgenticSdlc.Api --urls http://localhost:8080
 ```
 
+Run the React UI in terminal 3:
+
+```powershell
+cd src/ui/orchestrator-ui
+npm install
+npm run dev -- --host 0.0.0.0
+```
+
 Build the .NET API locally:
 
 ```powershell
@@ -166,6 +176,15 @@ Check Python syntax locally:
 
 ```powershell
 python -m compileall src/agent-service/app
+cd src/ui/orchestrator-ui
+npm run build
+```
+
+Build the React UI locally:
+
+```powershell
+cd src/ui/orchestrator-ui
+npm run build
 ```
 
 ## Smoke Test
@@ -174,6 +193,12 @@ API health:
 
 ```http
 GET http://localhost:8080/health
+```
+
+Open the UI:
+
+```http
+GET http://localhost:5173
 ```
 
 Agent service health:

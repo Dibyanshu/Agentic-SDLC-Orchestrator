@@ -47,6 +47,7 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       AGENT_SERVICE_URL: http://agent-service:8000
+      UI_ORIGIN: ${UI_ORIGIN:-http://localhost:5173}
       ConnectionStrings__Default: server=mysql;port=3306;database=${MYSQL_DATABASE:-agentic_sdlc};user=${MYSQL_USER:-agentic};password=${MYSQL_PASSWORD:-agentic_password}
     ports:
       - "${API_HOST_PORT:-8080}:8080"
@@ -54,6 +55,17 @@ services:
       mysql:
         condition: service_healthy
       agent-service:
+        condition: service_started
+
+  ui:
+    build:
+      context: ../src/ui/orchestrator-ui
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    ports:
+      - "${UI_HOST_PORT:-5173}:5173"
+    depends_on:
+      api:
         condition: service_started
 
 volumes:

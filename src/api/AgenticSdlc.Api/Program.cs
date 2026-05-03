@@ -5,6 +5,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("UiCors", policy =>
+    {
+        var uiOrigin = Environment.GetEnvironmentVariable("UI_ORIGIN") ?? "http://localhost:5173";
+        policy.WithOrigins(uiOrigin)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 builder.Services.AddSingleton<IProjectStore, MySqlProjectStore>();
 builder.Services.AddHttpClient<IAgentServiceClient, AgentServiceClient>((sp, client) =>
 {
@@ -17,6 +27,8 @@ builder.Services.AddHttpClient<IAgentServiceClient, AgentServiceClient>((sp, cli
 });
 
 var app = builder.Build();
+
+app.UseCors("UiCors");
 
 if (app.Environment.IsDevelopment())
 {

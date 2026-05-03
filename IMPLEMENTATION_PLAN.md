@@ -13,6 +13,7 @@ The repository now contains a runnable Phase 1 scaffold and several executable v
 - `README.md`
 - `.NET 8 API` in `src/api/AgenticSdlc.Api`
 - Python FastAPI agent service in `src/agent-service`
+- React/Vite UI in `src/ui/orchestrator-ui`
 - MySQL migrations in `infra/mysql/migrations`
 - Docker Compose runtime in `infra/docker-compose.yml`
 
@@ -32,13 +33,13 @@ Completed implementation:
 - Provider-ready LLM client with default stub mode and opt-in OpenAI mode.
 - Workflow metrics endpoint for tokens, cost, cache hits, latency, LLM calls, and refinement count.
 - `.env` is used for local runtime secrets and is ignored by git.
+- React UI console for project creation, workflow start/resume, section editing/history, HITL actions, agent progress, logs, and metrics.
+- Docker Compose UI service on `http://localhost:5173`.
 
 Still pending:
 
 - Real LLM client execution validated as the default path.
 - OpenAI-mode validation as the default path.
-- REACT UI creation and integration [Feature-UI.md]
-- Docker adjustments for the new REACT UI
 - Controlled RAG ingestion and retrieval.
 - Token budgets and response caching.
 
@@ -69,6 +70,8 @@ src/
       regeneration/
       schemas/
     tests/
+  ui/
+    orchestrator-ui/
   shared/
     contracts/
 infra/
@@ -100,6 +103,7 @@ Tasks:
    - `chroma`
    - `agent-service`
    - `api`
+   - `ui`
 5. Add root `.env.example`.
 6. Update `README.md` with setup and run commands.
 
@@ -116,8 +120,10 @@ dotnet sln AgenticSdlc.sln add src/api/AgenticSdlc.Api.Tests/AgenticSdlc.Api.Tes
 Acceptance criteria:
 
 - Done: `docker compose --env-file .env -f infra/docker-compose.yml up -d --build api agent-service` starts API, agent service, MySQL, and Chroma.
+- Done: `docker compose --env-file .env -f infra/docker-compose.yml up -d --build api agent-service ui` starts the React UI with API and agent service.
 - Done: `.NET API` exposes `GET /health`.
 - Done: `Python Agent Service` exposes `GET /health`.
+- Done: React UI exposes `GET http://localhost:5173`.
 - Done: README contains first-run instructions using `.env`.
 - Pending: create dedicated `.NET` and Python test projects.
 
@@ -534,6 +540,7 @@ Acceptance criteria:
 - Token budget enforcement
 - Response caching
 - Done: Metrics endpoint
+- Done: UI frontend
 - End-to-end smoke tests
 
 ### P2 - Later
@@ -544,7 +551,6 @@ Acceptance criteria:
 - Redis cache
 - Advanced RAG ranking
 - Critic/validation agent
-- UI frontend
 
 ## 14. Recommended First Sprint
 
