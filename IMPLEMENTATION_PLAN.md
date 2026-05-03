@@ -2,15 +2,43 @@
 
 ## 0. Current Repository State
 
-The repository currently contains product and design documentation only:
+Last updated: 2026-05-03
+
+The repository now contains a runnable Phase 1 scaffold and several executable vertical slices:
 
 - `PRD.md`
 - `HLD.md`
 - `LLD.md`
 - `Feature.md`
-- empty `README.md`
+- `README.md`
+- `.NET 8 API` in `src/api/AgenticSdlc.Api`
+- Python FastAPI agent service in `src/agent-service`
+- MySQL migrations in `infra/mysql/migrations`
+- Docker Compose runtime in `infra/docker-compose.yml`
 
-There is no application source code yet. This plan therefore starts from scaffolding and proceeds through executable vertical slices.
+Completed implementation:
+
+- Docker runtime for API, agent service, MySQL, and Chroma.
+- API and agent health endpoints.
+- MySQL-backed project creation and lookup.
+- Workflow start and status through the API.
+- Deterministic stub workflow: PRD -> HITL -> BA -> HITL -> Architecture -> HITL -> completed.
+- MySQL-backed artifacts, sections, section versions, checkpoints, and refinement logs.
+- Section list, detail, update, and version-history APIs.
+- HITL approve/edit/regenerate path with persisted refinement logs.
+- Hardcoded dependency resolver and regeneration planner.
+- Checkpoint retrieval endpoint.
+- `.env` is used for local runtime secrets and is ignored by git.
+
+Still pending:
+
+- Real LLM client execution.
+- LLM logging write path for successful and failed LLM calls.
+- Workflow resume endpoint.
+- Max refinement loop enforcement.
+- API/Python automated tests.
+- Controlled RAG ingestion and retrieval.
+- Token budgets, response caching, and metrics.
 
 ## 1. Target Phase 1 Architecture
 
@@ -27,7 +55,6 @@ Recommended repository layout:
 src/
   api/
     AgenticSdlc.Api/
-    AgenticSdlc.Api.Tests/
   agent-service/
     app/
       api/
@@ -51,9 +78,13 @@ docs/
   decisions/
 ```
 
+Note: `AgenticSdlc.Api.Tests`, Python tests, shared contracts, and docs folders are still pending.
+
 ## 2. Milestone Execution Order
 
 ### Milestone 1 - Repository and Local Runtime Scaffold
+
+Status: Mostly complete.
 
 Goal: make the repo runnable before business logic is added.
 
@@ -82,12 +113,15 @@ dotnet sln AgenticSdlc.sln add src/api/AgenticSdlc.Api.Tests/AgenticSdlc.Api.Tes
 
 Acceptance criteria:
 
-- `docker compose up` starts MySQL and Chroma.
-- `.NET API` exposes `GET /health`.
-- `Python Agent Service` exposes `GET /health`.
-- README contains first-run instructions.
+- Done: `docker compose --env-file .env -f infra/docker-compose.yml up -d --build api agent-service` starts API, agent service, MySQL, and Chroma.
+- Done: `.NET API` exposes `GET /health`.
+- Done: `Python Agent Service` exposes `GET /health`.
+- Done: README contains first-run instructions using `.env`.
+- Pending: create dedicated `.NET` and Python test projects.
 
 ## 3. Milestone 2 - Database Foundation
+
+Status: Mostly complete.
 
 Goal: establish persistent, versioned project state.
 
@@ -121,12 +155,16 @@ Minimum schema corrections from current docs:
 
 Acceptance criteria:
 
-- Fresh database can be created from migrations.
-- `POST /projects` persists a project.
-- `GET /projects/{id}` returns the created project.
-- Section updates create a new `section_versions` row.
+- Done: Fresh database can be created from migrations.
+- Done: `POST /projects` persists a project.
+- Done: `GET /projects/{id}` returns the created project.
+- Done: Section updates create a new `section_versions` row.
+- Done: Checkpoints and refinement logs are persisted.
+- Pending: LLM logging writes and LLM context chunk writes.
 
 ## 4. Milestone 3 - .NET Control Plane API
+
+Status: Partially complete.
 
 Goal: expose stable APIs used by UI and orchestration clients.
 
@@ -142,8 +180,8 @@ GET  /workflow/{projectId}/status
 
 GET  /sections/{projectId}
 GET  /sections/{projectId}/{artifactType}/{sectionName}
-PUT  /sections/{sectionId}
-GET  /sections/{sectionId}/versions
+PUT  /sections/{projectId}/{artifactType}/{sectionName}
+GET  /sections/{projectId}/{artifactType}/{sectionName}/versions
 
 POST /hitl/action
 
@@ -160,12 +198,17 @@ Tasks:
 
 Acceptance criteria:
 
-- All endpoints return structured error responses.
-- Invalid HITL actions fail with `400`.
-- API can call agent-service health endpoint.
-- Tests cover project creation, section update, and HITL validation.
+- Done: Project, workflow start/status, sections, section detail, section update, section versions, HITL action, and checkpoints endpoints exist.
+- Done: Invalid HITL actions fail with `400`.
+- Done: API can call the agent service.
+- Pending: `POST /workflow/resume`.
+- Pending: `GET /logs/llm/{projectId}`.
+- Pending: automated tests for project creation, section update, and HITL validation.
+- Pending: normalize all downstream agent-service errors into structured API errors instead of relying on `EnsureSuccessStatusCode`.
 
 ## 5. Milestone 4 - Python Agent Service Skeleton
+
+Status: Partially complete.
 
 Goal: make workflow execution callable independently of the .NET API.
 
@@ -204,17 +247,26 @@ POST /workflow/start
 POST /workflow/resume
 POST /workflow/hitl
 GET  /workflow/{projectId}/state
+GET  /sections/{projectId}
+GET  /sections/{projectId}/{artifactType}/{sectionName}
+PUT  /sections/{projectId}/{artifactType}/{sectionName}
+GET  /sections/{projectId}/{artifactType}/{sectionName}/versions
+GET  /checkpoints/{projectId}
 GET  /health
 ```
 
 Acceptance criteria:
 
-- Agent service can initialize an `AgentState`.
-- LangGraph compiles.
-- `manager_node -> pm_node -> hitl_node` executes and pauses.
-- Checkpoint is saved after each node.
+- Done: Agent service can initialize an `AgentState`.
+- Done: `manager_node -> pm_node -> hitl_node` executes and pauses.
+- Done: Checkpoint is saved after node transitions.
+- Done: sections, versions, checkpoints, and HITL refinement logs are persisted.
+- Pending: replace manual runner with compiled LangGraph graph if strict LangGraph execution is required for the demo.
+- Pending: `POST /workflow/resume`.
 
 ## 6. Milestone 5 - First Vertical Slice: Project to PRD to HITL
+
+Status: Partially complete with deterministic stub output.
 
 Goal: deliver one complete working path before adding BA and architecture.
 
@@ -248,12 +300,16 @@ Tasks:
 
 Acceptance criteria:
 
-- A project can generate PRD sections.
-- Invalid LLM JSON is logged and retried up to 2 times.
-- LLM log includes prompt, response, token estimates, status, latency, and cache metadata.
-- Workflow status reports `paused_for_hitl`.
+- Done: A project can generate PRD sections through deterministic PM stub logic.
+- Done: Workflow status reports `paused_for_hitl`.
+- Done: PRD sections are persisted and can be queried.
+- Pending: real PM prompt template execution through an LLM provider.
+- Pending: invalid LLM JSON logging and retry behavior.
+- Pending: LLM log includes prompt, response, token estimates, status, latency, and cache metadata.
 
 ## 7. Milestone 6 - HITL Approve/Edit/Regenerate
+
+Status: Partially complete.
 
 Goal: make human control real and auditable.
 
@@ -273,12 +329,16 @@ Tasks:
 
 Acceptance criteria:
 
-- Approving PRD moves workflow to BA stage.
-- Editing `PRD.Features` creates a new version.
-- Regenerating a section creates an LLM log and new section version.
-- Exceeding max refinement loops returns a controlled error.
+- Done: Approving PRD moves workflow to BA stage.
+- Done: Editing `PRD.Features` creates a new version.
+- Done: Regeneration creates a plan and reruns the selected deterministic node sequence.
+- Done: refinement actions are persisted in `refinement_logs`.
+- Pending: regeneration through real LLM calls and LLM logs.
+- Pending: max refinement loop enforcement.
 
 ## 8. Milestone 7 - BA and Architect Agents
+
+Status: Partially complete with deterministic stub output.
 
 Goal: complete the main deterministic workflow.
 
@@ -306,11 +366,15 @@ Tasks:
 
 Acceptance criteria:
 
-- Full workflow can run from project input to PRD, BA, and Architecture artifacts.
-- Workflow pauses after each stage.
-- Approving all stages marks workflow as `completed`.
+- Done: Full workflow can run from project input to PRD, BA, and Architecture artifacts.
+- Done: Workflow pauses after each stage.
+- Done: Approving all stages marks workflow as `completed`.
+- Pending: real BA and Architect prompt templates using LLM output.
+- Pending: stricter structured output validation.
 
 ## 9. Milestone 8 - Section-wise Regeneration
+
+Status: Partially complete.
 
 Goal: regenerate only the required sections and downstream dependencies.
 
@@ -334,9 +398,11 @@ Tasks:
 
 Acceptance criteria:
 
-- `single` regeneration of `PRD.Features` updates only PRD output.
-- `cascade` regeneration of `PRD.Features` updates BA user stories and architecture dependencies.
-- Regeneration plan is visible through workflow status.
+- Done: `single` mode plans the owning node.
+- Done: `cascade` mode plans downstream nodes.
+- Done: unchanged section content does not create noisy section versions.
+- Pending: limit regeneration writes to exact dependent sections rather than whole owning artifact output where needed.
+- Pending: make regeneration plan visible in the API workflow status response explicitly.
 
 ## 10. Milestone 9 - Controlled RAG
 
@@ -438,17 +504,17 @@ Acceptance criteria:
 
 ### P0 - Must Have for Phase 1 Demo
 
-- Repo scaffold
-- Docker Compose with MySQL and Chroma
-- Project API
-- Section API with versioning
-- Workflow start/resume
-- LangGraph skeleton
-- PM, BA, Architect nodes
-- HITL approve/edit/regenerate
-- LLM logging
-- Checkpointing
-- Hardcoded dependency-based regeneration
+- Done: Repo scaffold
+- Done: Docker Compose with MySQL and Chroma
+- Done: Project API
+- Done: Section API with versioning
+- Partial: Workflow start/resume. Start exists; resume is pending.
+- Partial: LangGraph skeleton. Deterministic runner exists; compiled LangGraph graph is pending if required.
+- Partial: PM, BA, Architect nodes. Deterministic stubs exist; real LLM execution is pending.
+- Partial: HITL approve/edit/regenerate. Main flow exists; loop limit is pending.
+- Pending: LLM logging
+- Done: Checkpointing
+- Partial: Hardcoded dependency-based regeneration. Planner exists; exact dependent-section write behavior needs refinement.
 
 ### P1 - Should Have
 
@@ -471,6 +537,8 @@ Acceptance criteria:
 
 ## 14. Recommended First Sprint
 
+Status: Completed as an initial vertical slice, with deterministic stub agents.
+
 Sprint length: 1 week.
 
 Deliverable: first vertical slice from project creation to PRD generation and HITL pause.
@@ -483,12 +551,24 @@ Day-by-day plan:
 4. Day 4: PM agent, prompt template, LLM client, LLM logging.
 5. Day 5: wire `.NET API` to agent service, run start workflow, verify PRD sections.
 
-Sprint demo script:
+## 14.1 Recommended Next Sprint
+
+Sprint length: 1 week.
+
+Deliverable: real LLM-backed PRD generation with mandatory LLM logging and controlled retry behavior.
+
+Day-by-day plan:
+
+1. Day 1: implement `llm_logs` write service in Python and expose API log retrieval through `.NET`.
+2. Day 2: implement provider-backed LLM client using `OPENAI_API_KEY` from `.env`, with deterministic stub fallback only when explicitly configured.
+3. Day 3: implement PM prompt template, JSON parsing, schema validation, and retry up to 2 times.
+4. Day 4: wire PM node to LLM client and store LLM logs for success and failure.
+5. Day 5: validate `POST /projects -> POST /workflow/start -> GET /sections -> GET /logs/llm` in Docker.
+
+Next sprint demo script:
 
 ```powershell
-docker compose up -d
-dotnet run --project src/api/AgenticSdlc.Api
-uvicorn app.main:app --reload --app-dir src/agent-service
+docker compose --env-file .env -f infra/docker-compose.yml up -d --build api agent-service
 ```
 
 Then call:
@@ -504,7 +584,7 @@ GET /logs/llm/{projectId}
 
 A milestone is done only when:
 
-- Code is committed in the expected module.
+- Code exists in the expected module.
 - APIs are documented in OpenAPI.
 - Database migrations are included.
 - Unit or integration tests cover the main behavior.
@@ -512,6 +592,13 @@ A milestone is done only when:
 - Failure behavior is logged and returns structured errors.
 - No LLM call occurs without an `llm_logs` record.
 - No workflow node completes without a checkpoint.
+
+For this local working session, a milestone should also be validated with:
+
+- `python -m compileall src/agent-service/app`
+- `& 'C:\Program Files\dotnet\dotnet.exe' build src/api/AgenticSdlc.Api/AgenticSdlc.Api.csproj`
+- `docker compose --env-file .env -f infra/docker-compose.yml up -d --build api agent-service`
+- A smoke test through the `.NET API` control plane.
 
 ## 16. Key Engineering Decisions
 
@@ -521,4 +608,5 @@ A milestone is done only when:
 4. Keep LLM retrieval centralized in Context Builder.
 5. Build one vertical slice before implementing every agent.
 6. Treat HITL as a persisted workflow state, not an in-memory pause.
-
+7. Use `.env` for local secrets and keep `.env.example` as the committed template.
+8. Avoid creating new section versions when regenerated content is unchanged.
